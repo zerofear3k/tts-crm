@@ -1,0 +1,2347 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<meta name="theme-color" content="#0f1a0f">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="TTS CRM">
+<title>Toronto Tree Services CRM</title>
+<link rel="manifest" href="manifest.json">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Source+Sans+3:wght@400;600;700&display=swap" rel="stylesheet">
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+<script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<style>
+:root{
+  --sans:'Source Sans 3',sans-serif; --serif:'Playfair Display',serif;
+  --green:#4a7c4a; --green-dark:#3d6b3d; --green-light:#5a8c5a; --green-bright:#7dcf7d;
+  --bg:#0f1a0f; --card:#162516; --card2:#1a2e1a; --border:#2a3d2a;
+  --muted:#5a7a5a; --text:#e8ead6; --text-mid:#9ab89a;
+  --red:#ef4444; --orange:#f97316; --amber:#f59e0b; --blue:#3b82f6; --purple:#8b5cf6; --emerald:#10b981;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--sans);overflow-x:hidden}
+::-webkit-scrollbar{width:4px}::-webkit-scrollbar-track{background:#1a2e1a}::-webkit-scrollbar-thumb{background:#4a7c4a;border-radius:3px}
+#app{min-height:100vh}
+.page{max-width:780px;margin:0 auto;padding:20px 14px 100px;width:100%}
+
+/* Header */
+.header{background:linear-gradient(180deg,#0a130a,var(--bg));border-bottom:1px solid #1a2e1a;padding:12px 16px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:40;backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)}
+.brand-title{font-family:var(--serif);font-weight:900;font-size:16px;color:#b8d4b8;line-height:1.1}
+.brand-sub{font-size:10px;color:#4a6a4a;letter-spacing:1.2px;text-transform:uppercase;display:flex;align-items:center;gap:4px}
+
+/* Cards */
+.card{background:linear-gradient(135deg,var(--card2),var(--card));border:1px solid var(--border);border-radius:14px;padding:18px}
+.card-sm{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:16px}
+.section-title{font-size:11px;font-weight:700;color:var(--green-light);text-transform:uppercase;letter-spacing:1px;margin-bottom:12px;font-family:var(--sans)}
+
+/* Alert banners */
+.alert-banner{border-radius:12px;padding:14px 16px;margin-bottom:10px;display:flex;align-items:flex-start;gap:10px}
+.alert-red{background:#3a0f0f;border:1px solid #7f1d1d}
+.alert-amber{background:#2a1f0a;border:1px solid #78350f}
+.alert-blue{background:#0a1a3a;border:1px solid #1e3a5f}
+
+/* Stats grid */
+.stats-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+@media(min-width:600px){.stats-grid{grid-template-columns:repeat(4,1fr)}}
+
+/* Buttons */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;border:none;border-radius:10px;cursor:pointer;font-family:var(--sans);font-weight:700;transition:opacity .15s,transform .1s;text-decoration:none}
+.btn:active{transform:scale(.96)}
+.btn-primary{background:linear-gradient(135deg,var(--green),var(--green-dark));color:var(--text);padding:12px 20px;font-size:15px;min-height:48px}
+.btn-primary:active{opacity:.85}
+.btn-ghost{background:transparent;color:var(--text-mid);border:1px solid var(--border);padding:10px 18px;font-size:14px;min-height:48px}
+.btn-ghost:active{border-color:var(--green)}
+.btn-danger{background:#7f1d1d;color:#fca5a5;border:1px solid #991b1b;padding:12px 20px;font-size:15px;min-height:48px}
+.btn-success{background:linear-gradient(135deg,#166534,#14532d);color:#bbf7d0;border:1px solid #166534;padding:10px 16px;font-size:13px;min-height:40px}
+.btn-sm{padding:8px 14px;font-size:13px;min-height:38px;border-radius:8px}
+
+/* Inputs */
+input,select,textarea{background:#1a2e1a;border:1px solid #2d4a2d;border-radius:10px;color:var(--text);font-family:var(--sans);font-size:16px;padding:13px 14px;width:100%;outline:none;transition:border-color .2s;-webkit-appearance:none;appearance:none}
+input:focus,select:focus,textarea:focus{border-color:var(--green)}
+select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M0 0l6 8 6-8z' fill='%234a7c4a'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 14px center;padding-right:36px}
+select option{background:#1a2e1a}
+label{font-size:11px;font-weight:700;color:#6a9a6a;text-transform:uppercase;letter-spacing:1px;display:block;margin-bottom:6px;font-family:var(--sans)}
+.field{display:flex;flex-direction:column}
+
+/* Toggle */
+.toggle-wrap{display:flex;align-items:center;justify-content:space-between;background:#1a2e1a;border:1px solid #2d4a2d;border-radius:10px;padding:13px 14px}
+.toggle{width:46px;height:26px;background:#2a3d2a;border-radius:13px;position:relative;cursor:pointer;transition:background .2s;border:none;flex-shrink:0}
+.toggle.on{background:var(--green)}
+.toggle::after{content:'';position:absolute;width:20px;height:20px;background:#fff;border-radius:50%;top:3px;left:3px;transition:transform .2s}
+.toggle.on::after{transform:translateX(20px)}
+
+/* Job rows */
+.job-row{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:14px 16px;cursor:pointer;transition:border-color .15s,opacity .15s;position:relative}
+.job-row:active{background:#1c2f1c;border-color:var(--green)}
+@media(hover:hover){.job-row:hover{background:#1c2f1c;border-color:var(--green)}}
+.job-row.overdue{border-left:3px solid var(--red);border-color:var(--red)44}
+.job-row.today-job{border-left:3px solid var(--emerald)}
+.job-row.dimmed{opacity:.6}
+
+/* Status pill */
+.pill-s{border-radius:20px;padding:3px 9px;font-size:10px;font-weight:700;font-family:var(--sans);letter-spacing:.4px;text-transform:uppercase;white-space:nowrap;display:inline-block}
+
+/* Arborist toggle */
+.arb-toggle{display:flex;gap:10px}
+.arb-btn{flex:1;padding:12px;border-radius:10px;border:2px solid var(--border);background:transparent;color:var(--muted);font-family:var(--sans);font-size:14px;font-weight:700;cursor:pointer;transition:all .2s;min-height:48px}
+.arb-john{border-color:#3b82f6!important;color:#93c5fd!important;background:#1e3a5f33!important}
+.arb-patrick{border-color:#10b981!important;color:#6ee7b7!important;background:#0d3a2633!important}
+
+/* Cut preview */
+.cut-preview{background:linear-gradient(135deg,#0d1f0d,#122012);border:1px solid #2a4a2a;border-radius:12px;padding:16px;margin-top:8px}
+.cut-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;font-size:13px}
+.cut-row.total{border-top:1px solid #2a3d2a;padding-top:8px;margin-top:4px}
+.tier-badge{display:inline-block;background:#1a3a2a;border:1px solid #2a5a3a;border-radius:8px;padding:6px 12px;font-size:12px;color:#7dcf7d;margin-top:6px;font-family:var(--sans)}
+
+/* Photos */
+.photo-grid{display:flex;gap:10px;flex-wrap:wrap;margin-top:8px}
+.photo-thumb{width:90px;height:90px;object-fit:cover;border-radius:8px;border:1px solid var(--border);cursor:pointer}
+.photo-add{width:90px;height:90px;border:2px dashed var(--border);border-radius:8px;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;color:var(--muted);font-size:11px;gap:4px;background:transparent}
+.photo-add:active{border-color:var(--green);color:var(--green)}
+
+/* Bottom nav */
+.bottom-nav{position:fixed;bottom:0;left:0;right:0;background:#0a130a;border-top:1px solid #1a2e1a;display:flex;z-index:50;padding-bottom:env(safe-area-inset-bottom)}
+.nav-item{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:10px 0 12px;gap:3px;cursor:pointer;border:none;background:transparent;color:var(--muted);font-family:var(--sans);font-size:10px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;min-height:60px;transition:color .2s;position:relative}
+.nav-item.active{color:var(--green-bright)}
+.nav-badge{position:absolute;top:8px;right:calc(50% - 16px);background:var(--red);color:#fff;font-size:9px;font-weight:700;border-radius:10px;padding:1px 5px;min-width:16px;text-align:center}
+
+/* FAB */
+.fab{position:fixed;bottom:76px;right:18px;width:58px;height:58px;border-radius:50%;background:linear-gradient(135deg,var(--green-light),var(--green-dark));border:none;cursor:pointer;font-size:28px;display:flex;align-items:center;justify-content:center;box-shadow:0 6px 24px rgba(0,0,0,.6);z-index:51;color:var(--text);transition:transform .15s}
+.fab:active{transform:scale(.9)}
+
+/* Filter scroll */
+.filter-scroll{display:flex;gap:8px;overflow-x:auto;padding-bottom:4px;scrollbar-width:none}
+.filter-scroll::-webkit-scrollbar{display:none}
+.pill-f{padding:8px 14px;border-radius:20px;font-size:12px;font-weight:700;font-family:var(--sans);cursor:pointer;border:1px solid var(--border);white-space:nowrap;min-height:36px;background:transparent;color:var(--muted);transition:all .15s}
+
+/* Form grid */
+.form-grid{display:grid;grid-template-columns:1fr;gap:14px}
+@media(min-width:600px){.form-grid{grid-template-columns:1fr 1fr}}
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+
+/* Modals */
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.87);z-index:100;display:flex;align-items:flex-end}
+@media(min-width:480px){.overlay{align-items:center;justify-content:center}}
+.modal-sheet{background:var(--card);border:1px solid var(--border);border-radius:20px 20px 0 0;width:100%;padding:28px 20px 44px;max-height:92vh;overflow-y:auto}
+@media(min-width:480px){.modal-sheet{border-radius:16px;max-width:460px;padding:32px}}
+
+/* Photo viewer */
+.photo-viewer-img{width:100%;max-height:70vh;object-fit:contain;border-radius:10px;margin-bottom:12px}
+
+/* Monthly breakdown */
+.month-bar-wrap{display:flex;align-items:center;gap:10px;margin-bottom:8px}
+.month-bar-bg{flex:1;height:8px;background:#1a2e1a;border-radius:4px;overflow:hidden}
+.month-bar{height:100%;background:linear-gradient(90deg,var(--green),var(--green-light));border-radius:4px;transition:width .4s}
+
+/* Sync dot */
+.sync-dot{width:7px;height:7px;border-radius:50%;background:#4ade80;display:inline-block;animation:pulse 2s infinite;flex-shrink:0}
+.sync-dot.err{background:var(--red);animation:none}
+.sync-dot.loading{background:var(--amber)}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+
+/* Quick complete button */
+.quick-complete{position:absolute;bottom:12px;right:44px;width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,#166534,#14532d);border:2px solid #16a34a;color:#bbf7d0;font-size:16px;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:transform .15s;z-index:2}
+.quick-complete:active{transform:scale(.9)}
+
+/* Reminder badge */
+.remind-badge{display:inline-flex;align-items:center;gap:3px;background:#2a1f0a;border:1px solid #78350f;border-radius:6px;padding:2px 7px;font-size:10px;color:#fbbf24;font-weight:700}
+.remind-badge.due{background:#3a0f0f;border-color:#7f1d1d;color:#f87171}
+
+/* Paid badge */
+.paid-badge{display:inline-flex;align-items:center;gap:3px;background:#0d3a26;border:1px solid #166534;border-radius:6px;padding:2px 7px;font-size:10px;color:#6ee7b7;font-weight:700}
+
+/* Setup screen */
+.setup-screen{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;background:radial-gradient(ellipse at top,#1a3a1a,var(--bg))}
+.setup-card{background:var(--card);border:1px solid var(--border);border-radius:20px;padding:32px 24px;width:100%;max-width:480px}
+.setup-step{display:flex;gap:12px;align-items:flex-start;padding:10px 0;border-bottom:1px solid var(--border)}
+.setup-step:last-child{border-bottom:none}
+.step-num{width:26px;height:26px;border-radius:50%;background:var(--green);color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0;margin-top:1px}
+
+/* Toast */
+.toast{position:fixed;top:80px;left:50%;transform:translateX(-50%);background:#1a3a1a;border:1px solid #4a7c4a;color:#b8d4b8;padding:11px 22px;border-radius:10px;font-size:14px;z-index:200;box-shadow:0 4px 20px rgba(0,0,0,.5);white-space:nowrap;pointer-events:none}
+
+/* Colors */
+.pos{color:#4ade80}.neg{color:#f87171}.warn{color:#f59e0b}.info{color:#93c5fd}
+.john-c{color:#93c5fd}.pat-c{color:#6ee7b7}
+
+/* Windows 11 + OnePlus 13 compatibility */
+button,a{touch-action:manipulation}
+input,textarea,select{touch-action:manipulation;-webkit-user-select:text;user-select:text}
+.job-row,.card,.card-sm{-webkit-user-select:none;user-select:none}
+@media(min-width:1024px){
+  .page{padding-left:24px;padding-right:24px}
+  .bottom-nav{max-width:100%;justify-content:center}
+  .bottom-nav .nav-item{max-width:160px}
+  .fab{bottom:88px;right:32px;width:62px;height:62px}
+}
+/* Scrollable filter chips on narrow screens */
+.filter-scroll{-webkit-overflow-scrolling:touch}
+/* Prevent text size adjust on orientation change (OnePlus) */
+html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
+</style>
+</head>
+<body>
+<div id="app"><div style="min-height:100vh;display:flex;align-items:center;justify-content:center;color:#4a6a4a;font-family:sans-serif;font-size:14px">🌳 Loading...</div></div>
+<script>
+// ═══════════════════════════════════════════════════════════════
+// CONSTANTS
+// ═══════════════════════════════════════════════════════════════
+const JOB_TYPES = ["Tree Removal","Tree Trimming","Stump Grinding","Emergency Tree Service","Tree Planting","Crown Reduction","Cable Bracing","Tree Assessment","Lot Clearing"];
+const JOHN_TIERS = [{max:1999,cut:300},{max:3999,cut:450},{max:5999,cut:600},{max:7499,cut:900},{max:8999,cut:1000},{max:Infinity,cut:null}];
+const STATUS_CFG = {
+  "Estimate":   {color:"#f59e0b",bg:"#fef3c7",icon:"📝"},
+  "Scheduled":  {color:"#3b82f6",bg:"#dbeafe",icon:"📅"},
+  "In Progress":{color:"#8b5cf6",bg:"#ede9fe",icon:"⚡"},
+  "Completed":  {color:"#10b981",bg:"#d1fae5",icon:"✅"},
+  "Failed":     {color:"#f97316",bg:"#ffedd5",icon:"⚠️"},
+  "Cancelled":  {color:"#ef4444",bg:"#fee2e2",icon:"❌"},
+};
+const STATUSES = Object.keys(STATUS_CFG);
+const EXP0 = {employee:"",cleanup:"",gas:"",other:""};
+const JOB0 = {customerName:"",phone:"",email:"",address:"",jobType:"",assignedTo:"",jobValue:"",status:"Estimate",dueDate:"",notes:"",failReason:"",expenses:{...EXP0},johnCutOverride:"",remindDate:"",remindNote:"",followUpDate:"",photos:[],paid:false};
+
+// ═══════════════════════════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════════════════════════
+let db = null, jobs = [], leads = [], unsub = null, unsubLeads = null;
+
+const LEAD_STATUSES = ["New","Sent to Arborist","Estimate Done","Won → Job","Dead"];
+const LEAD_STATUS_CFG = {
+  "New":             {color:"#f59e0b",bg:"#fef3c7",icon:"🌱"},
+  "Sent to Arborist":{color:"#3b82f6",bg:"#dbeafe",icon:"📤"},
+  "Estimate Done":   {color:"#8b5cf6",bg:"#ede9fe",icon:"📋"},
+  "Won → Job":  {color:"#10b981",bg:"#d1fae5",icon:"🏆"},
+  "Dead":            {color:"#6b7280",bg:"#f3f4f633",icon:"💀"},
+};
+const LEAD0 = {customerName:"",phone:"",address:"",jobNeeded:"",availability:"",notes:"",assignedTo:"",status:"New",leadSource:""};
+
+let S = {
+  view:"dashboard",
+  form:{...JOB0,expenses:{...EXP0},photos:[]},
+  editing:null,
+  search:"",
+  filterStatus:"All",
+  filterArborist:"All",
+  deleteId:null,
+  quickCompleteJob:null,
+  photoViewerJob:null,
+  photoViewerIdx:0,
+  syncing:false,
+  syncErr:false,
+  showMonthly:false,
+  leadForm:{...LEAD0},
+  editingLead:null,
+  leadView:"list",
+  deleteLeadId:null,
+  copiedLeadId:null,
+  convertLead:null,
+  convertArborist:"",
+  convertJobType:"",
+  leadSearch:"",
+  customerHistoryName:null,
+  notepadText:"",
+  notepadLoaded:false,
+  weekView:false,
+  earningsPeriod:"thisMonth",
+  calcJobValue:"",
+  calcArborist:"John",
+  calcEmpExp:"",
+  calcCleanExp:"",
+  calcGasExp:"",
+  calcOtherExp:"",
+};
+
+// ═══════════════════════════════════════════════════════════════
+// FIREBASE
+// ═══════════════════════════════════════════════════════════════
+function initFB(cfg) {
+  try {
+    if (!firebase.apps.length) firebase.initializeApp(cfg);
+    db = firebase.firestore();
+    db.enablePersistence({synchronizeTabs:true}).catch(()=>{});
+    listenJobs(); listenLeads(); loadNotepad(); return true;
+  } catch(e){ console.error(e); return false; }
+}
+function listenJobs() {
+  if (unsub) unsub();
+  S.syncing = true; render();
+  unsub = db.collection("jobs").orderBy("createdAt","desc").onSnapshot(snap => {
+    jobs = snap.docs.map(d=>({...d.data(),_id:d.id}));
+    S.syncing = false; S.syncErr = false; render();
+  }, err => { S.syncErr = true; render(); });
+}
+async function dbSave(job) {
+  const d = {...job}; delete d._id;
+  if (S.editing) { await db.collection("jobs").doc(S.editing).set(d); }
+  else { d.createdAt = firebase.firestore.FieldValue.serverTimestamp(); await db.collection("jobs").add(d); }
+}
+async function dbPatch(id, data) { await db.collection("jobs").doc(id).update(data); }
+async function dbDelete(id) { await db.collection("jobs").doc(id).delete(); }
+
+// ─── LEADS FIREBASE ────────────────────────────────────────────
+function listenLeads() {
+  if (unsubLeads) unsubLeads();
+  unsubLeads = db.collection("leads").orderBy("createdAt","desc").onSnapshot(snap => {
+    leads = snap.docs.map(d=>({...d.data(),_id:d.id}));
+    render();
+  }, err => {
+    console.warn("Leads collection may not exist yet:", err.code);
+    leads = [];
+    render();
+  });
+}
+async function dbSaveLead(lead) {
+  const d={...lead}; delete d._id;
+  if(S.editingLead){ await db.collection("leads").doc(S.editingLead).set(d); }
+  else{ d.createdAt=firebase.firestore.FieldValue.serverTimestamp(); await db.collection("leads").add(d); }
+}
+async function dbDeleteLead(id){ await db.collection("leads").doc(id).delete(); }
+async function dbPatchLead(id,data){ await db.collection("leads").doc(id).update(data); }
+
+// ═══════════════════════════════════════════════════════════════
+// BUSINESS LOGIC
+// ═══════════════════════════════════════════════════════════════
+function getJohnCut(v) {
+  const n = parseFloat(v)||0; if(!n) return null;
+  const t = JOHN_TIERS.find(t=>n<=t.max); return t?t.cut:null;
+}
+function getJohnLabel(v) {
+  const n = parseFloat(v)||0; if(!n) return null;
+  if(n<=1999) return "Under $2,000 → $300";
+  if(n<=3999) return "$2,000–$3,999 → $450";
+  if(n<=5999) return "$4,000–$5,999 → $600";
+  if(n<=7499) return "$6,000–$7,499 → $900";
+  if(n<=8999) return "$7,500–$8,999 → $1,000";
+  return "$9,000+ → To be discussed";
+}
+function expTotal(exp){ return Object.values(exp||{}).reduce((s,v)=>s+(parseFloat(v)||0),0); }
+function patCut(v,exp){ return Math.max(0,((parseFloat(v)||0)-expTotal(exp))/2); }
+function getMyCut(job) {
+  if(["Cancelled","Failed"].includes(job.status)) return 0;
+  if(job.assignedTo==="John") return job.johnCutOverride ? parseFloat(job.johnCutOverride)||0 : getJohnCut(job.jobValue);
+  if(job.assignedTo==="Patrick") return patCut(job.jobValue, job.expenses);
+  return null;
+}
+function getEarned(job){ return job.status==="Completed" ? (getMyCut(job)||0) : 0; }
+
+function todayStr(){ return new Date().toISOString().slice(0,10); }
+function isOverdue(job){
+  if(!job.dueDate||["Completed","Cancelled","Failed"].includes(job.status)) return false;
+  return job.dueDate < todayStr();
+}
+function isToday(job){
+  if(!job.dueDate||["Completed","Cancelled","Failed"].includes(job.status)) return false;
+  return job.dueDate === todayStr();
+}
+function isSoon(job){
+  if(!job.dueDate||["Completed","Cancelled","Failed"].includes(job.status)) return false;
+  const d = new Date(job.dueDate+"T00:00:00");
+  const t = new Date(); t.setHours(0,0,0,0);
+  const diff = (d-t)/(1000*60*60*24);
+  return diff>0 && diff<=3;
+}
+function reminderDue(job){
+  if(!job.remindDate) return false;
+  return job.remindDate <= todayStr();
+}
+function needsFollowUp(job){
+  return job.status==="Estimate" && (!job.followUpDate || job.followUpDate <= todayStr());
+}
+
+// ═══════════════════════════════════════════════════════════════
+// HELPERS
+// ═══════════════════════════════════════════════════════════════
+function fmt(v){ const n=parseFloat(v); if(isNaN(n)||n===0) return "$0"; return "$"+Math.abs(n).toLocaleString("en-CA",{minimumFractionDigits:0,maximumFractionDigits:0}); }
+function fmtFull(d){ if(!d) return "—"; return new Date(d+"T00:00:00").toLocaleDateString("en-CA",{month:"short",day:"numeric",year:"numeric"}); }
+function fmtShort(d){ if(!d) return "—"; return new Date(d+"T00:00:00").toLocaleDateString("en-CA",{month:"short",day:"numeric"}); }
+function esc(s){ if(!s) return ""; return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); }
+function pill(status,sm){
+  const c=STATUS_CFG[status]||{color:"#888",bg:"#eee",icon:"•"};
+  return `<span class="pill-s" style="background:${c.bg}33;color:${c.color};border:1px solid ${c.color}66;padding:${sm?"2px 8px":"4px 12px"};font-size:${sm?"10px":"11px"}">${c.icon} ${status}</span>`;
+}
+function alertCount(){
+  return jobs.filter(j=>isOverdue(j)).length + jobs.filter(j=>reminderDue(j)&&!["Completed","Cancelled","Failed"].includes(j.status)).length + jobs.filter(j=>needsFollowUp(j)).length;
+}
+
+// ═══════════════════════════════════════════════════════════════
+// PHOTO HELPERS
+// ═══════════════════════════════════════════════════════════════
+function compressImage(file){
+  return new Promise(res=>{
+    const reader = new FileReader();
+    reader.onload = e=>{
+      const img = new Image();
+      img.onload = ()=>{
+        const MAX=500; let w=img.width,h=img.height;
+        if(w>MAX||h>MAX){ if(w>h){h=h*MAX/w;w=MAX;}else{w=w*MAX/h;h=MAX;} }
+        const c=document.createElement("canvas"); c.width=w; c.height=h;
+        c.getContext("2d").drawImage(img,0,0,w,h);
+        res(c.toDataURL("image/jpeg",0.55));
+      };
+      img.src=e.target.result;
+    };
+    reader.readAsDataURL(file);
+  });
+}
+function capturePhoto(){
+  const inp=document.createElement("input");
+  inp.type="file"; inp.accept="image/*"; inp.capture="environment";
+  inp.onchange=async e=>{
+    const f=e.target.files[0]; if(!f) return;
+    if((S.form.photos||[]).length>=3){showToast("Max 3 photos per job","warn");return;}
+    showToast("Compressing photo...");
+    const b64=await compressImage(f);
+    S.form.photos=[...(S.form.photos||[]),b64];
+    render();
+  };
+  inp.click();
+}
+function removePhoto(idx){
+  S.form.photos=S.form.photos.filter((_,i)=>i!==idx);
+  render();
+}
+function viewPhotos(jobId, idx){
+  S.photoViewerJob=jobId==="new"?{photos:S.form.photos||[],_id:"new"}:(jobs.find(j=>j._id===jobId)||null);
+  S.photoViewerIdx=idx||0;
+  render();
+}
+
+// ═══════════════════════════════════════════════════════════════
+// MONTHLY BREAKDOWN
+// ═══════════════════════════════════════════════════════════════
+function getMonthlyData(){
+  const months=[]; const now=new Date();
+  for(let i=5;i>=0;i--){
+    const d=new Date(now.getFullYear(),now.getMonth()-i,1);
+    const key=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}`;
+    const label=d.toLocaleDateString("en-CA",{month:"short",year:"numeric"});
+    const completed=jobs.filter(j=>j.status==="Completed"&&(j.dueDate||"").startsWith(key));
+    const earned=completed.reduce((s,j)=>s+getEarned(j),0);
+    months.push({key,label,earned,count:completed.length});
+  }
+  return months;
+}
+
+// ═══════════════════════════════════════════════════════════════
+// RENDER HELPERS
+// ═══════════════════════════════════════════════════════════════
+function render(){
+  const ae=document.activeElement;
+  const aid=ae?.id; const ss=ae?.selectionStart; const se=ae?.selectionEnd;
+  const sy=window.scrollY;
+
+  if(!localStorage.getItem("tts_fb_cfg")||!db){
+    document.getElementById("app").innerHTML=renderSetup();
+    return;
+  }
+
+  let html=`<div style="display:flex;flex-direction:column;min-height:100vh">`;
+  html+=renderHeader();
+  if(S.view==="dashboard") html+=renderDashboard();
+  else if(S.view==="list")  html+=renderList();
+  else if(S.view==="form")  html+=renderForm();
+  else if(S.view==="leads")    html+=renderLeads();
+  else if(S.view==="earnings") html+=renderEarnings();
+  else if(S.view==="settings") html+=renderSettings();
+  html+=`</div>`;
+  html+=renderBottomNav();
+  if(S.view==="leads") html+=`<button class="fab" onclick="openNewLead()">＋</button>`;
+  else if(S.view!=="form") html+=`<button class="fab" onclick="openNew()">＋</button>`;
+  if(S.deleteId)           html+=renderDeleteModal();
+  if(S.quickCompleteJob)   html+=renderQuickComplete();
+  if(S.photoViewerJob)     html+=renderPhotoViewer();
+  if(S.convertLead)        html+=renderConvertModal();
+  if(S.customerHistoryName)html+=renderCustomerHistory();
+
+  document.getElementById("app").innerHTML=html;
+  window.scrollTo(0,sy);
+  if(aid){const el=document.getElementById(aid);if(el){el.focus();try{el.setSelectionRange(ss,se);}catch(e){}}}
+}
+
+// ─── HEADER ────────────────────────────────────────────────────
+function renderHeader(){
+  const dot=S.syncErr?`<span class="sync-dot err"></span>`:S.syncing?`<span class="sync-dot loading"></span>`:`<span class="sync-dot"></span>`;
+  return `<div class="header">
+    <div style="display:flex;align-items:center;gap:10px">
+      <span style="font-size:26px">🌳</span>
+      <div>
+        <div class="brand-title">Toronto Tree Services</div>
+        <div class="brand-sub">${dot}Field CRM</div>
+      </div>
+    </div>
+    <div style="display:flex;gap:8px">
+      <button class="btn btn-ghost btn-sm" onclick="exportExcel()">📊 Export</button>
+      <button class="btn btn-primary btn-sm" onclick="openNew()">+ New</button>
+    </div>
+  </div>`;
+}
+
+// ─── BOTTOM NAV ────────────────────────────────────────────────
+function renderBottomNav(){
+  const ac=alertCount();
+  const newLeads = leads.filter(l=>l.status==="New").length;
+  const tabs=[
+    {id:"dashboard",icon:"📊",label:"Dash"},
+    {id:"list",icon:"📋",label:"Jobs",badge:ac},
+    {id:"leads",icon:"🌱",label:"Leads",badge:newLeads>0?newLeads:0},
+    {id:"earnings",icon:"💰",label:"Earnings"},
+    {id:"settings",icon:"⚙️",label:"More"},
+  ];
+  return `<div class="bottom-nav">${tabs.map(t=>`
+    <button class="nav-item ${S.view===t.id||(S.view==="form"&&t.id==="list")?"active":""}" onclick="setView('${t.id}')">
+      <span style="font-size:22px">${t.icon}</span>
+      ${t.badge?`<span class="nav-badge">${t.badge}</span>`:""}
+      ${t.label}
+    </button>`).join("")}
+  </div>`;
+}
+
+// ─── DASHBOARD ─────────────────────────────────────────────────
+function renderDashboard(){
+  const today=todayStr();
+  const todayJobs=jobs.filter(isToday);
+  const overdueJobs=jobs.filter(isOverdue);
+  const reminderJobs=jobs.filter(j=>reminderDue(j)&&!["Completed","Cancelled","Failed"].includes(j.status));
+  const followUpJobs=jobs.filter(needsFollowUp);
+  const completed=jobs.filter(j=>j.status==="Completed");
+  const totalEarned=completed.reduce((s,j)=>s+getEarned(j),0);
+  const johnEarned=completed.filter(j=>j.assignedTo==="John").reduce((s,j)=>s+getEarned(j),0);
+  const patEarned=completed.filter(j=>j.assignedTo==="Patrick").reduce((s,j)=>s+getEarned(j),0);
+  const active=jobs.filter(j=>["Scheduled","In Progress"].includes(j.status)).length;
+  const pendingEst=followUpJobs.length;
+
+  // Forecast: estimated cut from non-completed, non-cancelled, non-failed jobs
+  const forecast=jobs.filter(j=>!["Completed","Cancelled","Failed"].includes(j.status)).reduce((s,j)=>{
+    const c=getMyCut(j); return s+(typeof c==="number"?c:0);
+  },0);
+
+  const upcoming=[...jobs].filter(j=>j.dueDate&&!["Completed","Cancelled","Failed"].includes(j.status)).sort((a,b)=>new Date(a.dueDate)-new Date(b.dueDate)).slice(0,5);
+  const months=getMonthlyData();
+  const maxMonth=Math.max(...months.map(m=>m.earned),1);
+
+  return `<div class="page">
+
+  ${todayJobs.length?`
+  <div style="margin-bottom:14px">
+    <div class="section-title">🌅 Today's Jobs (${todayJobs.length})</div>
+    ${todayJobs.map(j=>`
+    <div class="alert-banner alert-blue" style="margin-bottom:8px;border-radius:10px;cursor:pointer" onclick="openEdit('${j._id}')">
+      <span style="font-size:20px">📋</span>
+      <div style="flex:1">
+        <div style="font-weight:700;color:#93c5fd">${esc(j.customerName)}</div>
+        <div style="font-size:12px;color:#5a7a9a">${esc(j.jobType||"—")} · 👷 ${esc(j.assignedTo||"—")}</div>
+      </div>
+      <div style="text-align:right;flex-shrink:0">
+        ${pill(j.status,true)}
+        <div style="font-size:12px;color:#4a6a8a;margin-top:4px">${fmt(j.jobValue)}</div>
+      </div>
+    </div>`).join("")}
+  </div>`:``}
+
+  ${overdueJobs.length?`
+  <div class="alert-banner alert-red" style="margin-bottom:14px;flex-direction:column">
+    <div style="display:flex;gap:8px;align-items:center;margin-bottom:10px">
+      <span style="font-size:18px">🔴</span>
+      <span style="font-weight:700;color:#f87171;font-size:14px">${overdueJobs.length} Overdue Job${overdueJobs.length!==1?"s":""}</span>
+    </div>
+    ${overdueJobs.slice(0,3).map(j=>`
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid #5a1a1a;cursor:pointer" onclick="openEdit('${j._id}')">
+      <div>
+        <div style="font-size:13px;font-weight:600;color:#fca5a5">${esc(j.customerName)}</div>
+        <div style="font-size:11px;color:#9a5a5a">${esc(j.jobType||"—")} · Due ${fmtShort(j.dueDate)}</div>
+      </div>
+      <button class="btn btn-success btn-sm" onclick="event.stopPropagation();quickComplete('${j._id}')">✓ Done</button>
+    </div>`).join("")}
+    ${overdueJobs.length>3?`<div style="font-size:12px;color:#9a5a5a;margin-top:8px;text-align:center;cursor:pointer" onclick="setView('list')">+${overdueJobs.length-3} more — view all jobs →</div>`:""}
+  </div>`:``}
+
+  ${reminderJobs.length?`
+  <div class="alert-banner alert-amber" style="margin-bottom:14px;flex-direction:column">
+    <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px">
+      <span style="font-size:18px">🔔</span>
+      <span style="font-weight:700;color:#fbbf24;font-size:14px">${reminderJobs.length} Reminder${reminderJobs.length!==1?"s":""} Due</span>
+    </div>
+    ${reminderJobs.map(j=>`
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid #4a3510;cursor:pointer" onclick="openEdit('${j._id}')">
+      <div>
+        <div style="font-size:13px;font-weight:600;color:#fde68a">${esc(j.customerName)}</div>
+        <div style="font-size:11px;color:#9a7a3a">${esc(j.remindNote||"Follow up")}</div>
+      </div>
+      <span style="font-size:11px;color:#d97706">${fmtShort(j.remindDate)}</span>
+    </div>`).join("")}
+  </div>`:``}
+
+  ${followUpJobs.length?`
+  <div class="card-sm" style="margin-bottom:14px;border-color:#4a3510">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+      <div class="section-title" style="margin-bottom:0;color:#fbbf24">📩 Estimates Needing Follow-Up (${followUpJobs.length})</div>
+    </div>
+    ${followUpJobs.map(j=>`
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid #2a1f0a;cursor:pointer" onclick="openEdit('${j._id}')">
+      <div style="flex:1;min-width:0">
+        <div style="font-size:13px;font-weight:700;color:#fde68a;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(j.customerName)}</div>
+        <div style="font-size:11px;color:#9a7a3a">${esc(j.jobType||"—")} · ${fmt(j.jobValue)} · ${esc(j.assignedTo||"—")}</div>
+      </div>
+      <div style="text-align:right;flex-shrink:0;margin-left:10px">
+        <div style="font-size:11px;color:#f59e0b;margin-bottom:3px">Follow up${j.followUpDate?" by "+fmtShort(j.followUpDate):""}</div>
+        <a href="tel:${esc(j.phone||"")}" onclick="event.stopPropagation()" style="font-size:12px;color:#4ade80;text-decoration:none;background:#0d3a26;padding:3px 8px;border-radius:6px;border:1px solid #166534">📞 Call</a>
+      </div>
+    </div>`).join("")}
+  </div>`:``}
+
+  <div class="stats-grid" style="margin-bottom:14px">
+    ${[
+      {icon:"🗂️",label:"Total Jobs",value:jobs.length},
+      {icon:"⚡",label:"Active",value:active},
+      {icon:"📝",label:"Estimates",value:pendingEst},
+      {icon:"✅",label:"Completed",value:completed.length},
+    ].map(s=>`<div class="card" style="padding:14px">
+      <div style="font-size:20px;margin-bottom:6px">${s.icon}</div>
+      <div style="font-family:var(--serif);font-size:22px;font-weight:700;color:#b8d4b8">${s.value}</div>
+      <div style="font-size:11px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.5px;margin-top:2px">${s.label}</div>
+    </div>`).join("")}
+  </div>
+
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px">
+    <div class="card" style="padding:16px">
+      <div class="section-title" style="margin-bottom:6px">💰 Total Earned</div>
+      <div style="font-family:var(--serif);font-size:26px;font-weight:700" class="pos">+${fmt(totalEarned)}</div>
+      <div style="font-size:11px;color:var(--muted);margin-top:6px">
+        <span class="john-c">● John: ${fmt(johnEarned)}</span><br>
+        <span class="pat-c">● Patrick: ${fmt(patEarned)}</span>
+      </div>
+    </div>
+    <div class="card" style="padding:16px;border-color:#2a4a2a">
+      <div class="section-title" style="margin-bottom:6px;color:#7dcf7d">📈 Forecasted</div>
+      <div style="font-family:var(--serif);font-size:26px;font-weight:700;color:#7dcf7d">+${fmt(forecast)}</div>
+      <div style="font-size:11px;color:var(--muted);margin-top:6px">From all active jobs<br>if completed</div>
+    </div>
+  </div>
+
+  <div class="card-sm" style="margin-bottom:14px">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:${S.showMonthly?"14px":"0"}">
+      <div class="section-title" style="margin-bottom:0">📊 Monthly Earnings</div>
+      <button class="btn btn-ghost btn-sm" onclick="toggleMonthly()">${S.showMonthly?"▲ Hide":"▼ Show"}</button>
+    </div>
+    ${S.showMonthly?months.map(m=>`
+    <div class="month-bar-wrap">
+      <div style="font-size:12px;color:var(--muted);width:68px;flex-shrink:0">${m.label}</div>
+      <div class="month-bar-bg">
+        <div class="month-bar" style="width:${m.earned?Math.max(6,(m.earned/maxMonth)*100):0}%"></div>
+      </div>
+      <div style="font-size:12px;color:#7dcf7d;font-weight:700;width:60px;text-align:right;flex-shrink:0">${fmt(m.earned)}</div>
+      <div style="font-size:11px;color:var(--muted);width:24px;text-align:right;flex-shrink:0">${m.count>0?m.count+"j":""}</div>
+    </div>`).join(""):""}
+  </div>
+
+  ${leads.length?`
+  <div class="card-sm" style="margin-bottom:14px">
+    <div class="section-title">🌱 Lead Sources</div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      ${(()=>{
+        const sources=["Facebook","Website","Google","Referral","Phone Call","Kijiji","Nextdoor","Other","Unknown"];
+        const icons={"Facebook":"📘","Website":"🌐","Google":"🔍","Referral":"🤝","Phone Call":"📞","Kijiji":"📌","Nextdoor":"🏘","Other":"•","Unknown":"❓"};
+        return sources.map(s=>{
+          const cnt = leads.filter(l=>(l.leadSource||"Unknown")===s||(s==="Unknown"&&!l.leadSource)).length;
+          if(!cnt) return "";
+          return \`<div style="background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:8px 12px;text-align:center;min-width:70px">
+            <div style="font-size:18px">\${icons[s]||"•"}</div>
+            <div style="font-family:var(--serif);font-size:18px;font-weight:700;color:#b8d4b8">\${cnt}</div>
+            <div style="font-size:10px;color:var(--muted);font-weight:700">\${s}</div>
+          </div>\`;
+        }).join("");
+      })()}
+    </div>
+  </div>`:""}
+
+  <!-- STICKY NOTEPAD -->
+  <div class="card-sm" style="margin-bottom:14px;border-color:#2a3a4a">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+      <div class="section-title" style="margin-bottom:0;color:#93c5fd">📝 Quick Notes</div>
+      <span style="font-size:10px;color:var(--muted)">Auto-saves</span>
+    </div>
+    <textarea id="notepad-ta" rows="3"
+      style="background:#0a1a2a;border-color:#1e3a5f;color:#c8d8e8;font-size:14px;resize:none"
+      placeholder="e.g. Call Mike back, buy chainsaw oil, John has truck issue Tuesday..."
+      oninput="saveNotepad(this.value)">${esc(S.notepadText||"")}</textarea>
+  </div>
+
+  <!-- ARBORIST SUMMARY -->
+  <div class="card-sm" style="margin-bottom:14px">
+    <div class="section-title">👷 Arborist Summary</div>
+    <div style="display:flex;gap:12px;flex-wrap:wrap">
+      ${["John","Patrick"].map(arb=>{
+        const arbJobs = jobs.filter(j=>j.assignedTo===arb);
+        const done    = arbJobs.filter(j=>j.status==="Completed");
+        const active  = arbJobs.filter(j=>["Scheduled","In Progress"].includes(j.status)).length;
+        const earned  = done.reduce((s,j)=>s+getEarned(j),0);
+        const forecast= arbJobs.filter(j=>!["Completed","Cancelled","Failed"].includes(j.status)).reduce((s,j)=>{const c=getMyCut(j);return s+(typeof c==="number"?c:0);},0);
+        const arbColor= arb==="John"?"#93c5fd":"#6ee7b7";
+        const arbBg   = arb==="John"?"#1e3a5f33":"#0d3a2633";
+        const arbBorder=arb==="John"?"#3b82f644":"#10b98144";
+        return `<div style="flex:1;min-width:140px;background:${arbBg};border:1px solid ${arbBorder};border-radius:12px;padding:14px">
+          <div style="font-size:13px;font-weight:700;color:${arbColor};margin-bottom:10px">👷 ${arb}</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+            <div><div style="font-family:var(--serif);font-size:20px;font-weight:700;color:${arbColor}">${arbJobs.length}</div><div style="font-size:10px;color:var(--muted);font-weight:700;text-transform:uppercase">Total Jobs</div></div>
+            <div><div style="font-family:var(--serif);font-size:20px;font-weight:700;color:${arbColor}">${active}</div><div style="font-size:10px;color:var(--muted);font-weight:700;text-transform:uppercase">Active</div></div>
+            <div><div style="font-family:var(--serif);font-size:18px;font-weight:700;color:#4ade80">${fmt(earned)}</div><div style="font-size:10px;color:var(--muted);font-weight:700;text-transform:uppercase">Earned</div></div>
+            <div><div style="font-family:var(--serif);font-size:18px;font-weight:700;color:#7dcf7d">${fmt(forecast)}</div><div style="font-size:10px;color:var(--muted);font-weight:700;text-transform:uppercase">Forecast</div></div>
+          </div>
+        </div>`;
+      }).join("")}
+    </div>
+  </div>
+
+  <!-- WEEK VIEW -->
+  <div class="card-sm" style="margin-bottom:14px">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:${S.weekView?"12px":"0"}">
+      <div class="section-title" style="margin-bottom:0">🗓️ This Week's Jobs</div>
+      <button class="btn btn-ghost btn-sm" onclick="S.weekView=!S.weekView;render()">${S.weekView?"▲ Hide":"▼ Show"}</button>
+    </div>
+    ${S.weekView?`${(()=>{
+      const today=new Date(); today.setHours(0,0,0,0);
+      const weekEnd=new Date(today); weekEnd.setDate(today.getDate()+6);
+      const weekJobs=[...jobs].filter(j=>{
+        if(!j.dueDate||["Cancelled","Failed"].includes(j.status)) return false;
+        const d=new Date(j.dueDate+"T00:00:00");
+        return !isNaN(d) && d>=today && d<=weekEnd;
+      }).sort((a,b)=>new Date(a.dueDate)-new Date(b.dueDate));
+      if(!weekJobs.length) return `<div style="font-size:14px;color:var(--muted);padding:4px 0">No jobs scheduled this week</div>`;
+      const days=["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
+      let lastDay="";
+      return weekJobs.map(j=>{
+        const d=new Date(j.dueDate+"T00:00:00");
+        const dayLabel=days[d.getDay()]+" "+d.getDate();
+        const isNew=dayLabel!==lastDay; lastDay=dayLabel;
+        const cut=getMyCut(j); const arbC=j.assignedTo==="John"?"#93c5fd":"#6ee7b7";
+        return (isNew?`<div style="font-size:11px;font-weight:700;color:var(--green-light);text-transform:uppercase;letter-spacing:.8px;margin:${isNew&&lastDay!==dayLabel?"10px":"0"} 0 6px;padding-top:${isNew?"8px":"0"};border-top:${isNew?"1px solid var(--border)":"none"}">${dayLabel}</div>`:"")
+        +`<div onclick="openEdit('${j._id}')" style="display:flex;justify-content:space-between;align-items:center;padding:9px 10px;background:var(--card2);border-radius:8px;margin-bottom:6px;cursor:pointer;border:1px solid var(--border)">
+          <div style="flex:1;min-width:0">
+            <div style="font-size:13px;font-weight:700;color:#c8dcc8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(j.customerName)}</div>
+            <div style="font-size:11px;color:var(--muted)">${esc(j.jobType||"—")} · <span style="color:${arbC}">${esc(j.assignedTo||"—")}</span></div>
+          </div>
+          <div style="text-align:right;flex-shrink:0;margin-left:10px">
+            ${pill(j.status,true)}
+            ${cut!==null?`<div style="font-size:11px;color:#7dcf7d;margin-top:2px">~${fmt(cut)}</div>`:""}
+          </div>
+        </div>`;
+      }).join("");
+    })()}`:""}
+  </div>
+
+  <div class="card-sm">
+    <div class="section-title">📅 Upcoming Jobs</div>
+    ${upcoming.length===0
+      ?`<div style="color:var(--muted);font-size:14px">No upcoming jobs scheduled</div>`
+      :upcoming.map((j,i)=>`
+      <div onclick="openEdit('${j._id}')" style="display:flex;justify-content:space-between;align-items:center;padding:11px 0;${i<upcoming.length-1?"border-bottom:1px solid #1e3a1e":""};cursor:pointer;gap:8px">
+        <div style="flex:1;min-width:0">
+          <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+            <span style="font-size:13px;font-weight:700;color:#c8dcc8">${esc(j.customerName)}</span>
+            ${isOverdue(j)?`<span style="font-size:10px;color:var(--red);font-weight:700;background:#3a0f0f;padding:1px 6px;border-radius:4px">OVERDUE</span>`:""}
+          </div>
+          <div style="font-size:12px;color:var(--muted)">${j.assignedTo||"—"} · ${j.jobType||"—"}</div>
+        </div>
+        <div style="text-align:right;flex-shrink:0">
+          <div style="font-size:12px;color:var(--text-mid);margin-bottom:3px">${fmtShort(j.dueDate)}</div>
+          ${pill(j.status,true)}
+        </div>
+      </div>`).join("")}
+  </div>
+  </div>`;
+}
+
+// ─── JOB LIST ──────────────────────────────────────────────────
+function renderList(){
+  const q=S.search.toLowerCase();
+  const filtered=jobs.filter(j=>{
+    const ms=!q||[j.customerName,j.address,j.jobType,j.assignedTo].some(f=>(f||"").toLowerCase().includes(q));
+    return ms && (S.filterStatus==="All"||j.status===S.filterStatus) && (S.filterArborist==="All"||j.assignedTo===S.filterArborist);
+  });
+
+  return `<div class="page">
+    <div style="font-family:var(--serif);font-size:24px;font-weight:700;color:#c8dcc8;margin-bottom:2px">All Jobs</div>
+    <div style="color:var(--muted);font-size:13px;margin-bottom:14px">${filtered.length} job${filtered.length!==1?"s":""}</div>
+
+    <input id="search-inp" style="margin-bottom:10px;font-size:15px" placeholder="🔍  Search name, address, job type..." value="${esc(S.search)}" oninput="S.search=this.value;renderListOnly()">
+
+    <div style="display:flex;gap:8px;margin-bottom:10px">
+      ${["All","John","Patrick"].map(a=>{
+        const ac=S.filterArborist===a;
+        const cc={John:{c:"#93c5fd",bg:"#1e3a5f55",b:"#3b82f6"},Patrick:{c:"#6ee7b7",bg:"#0d3a2655",b:"#10b981"}};
+        const c=cc[a]||{c:"#b8d4b8",bg:"#2d4a2d",b:"#4a7c4a"};
+        return `<button class="pill-f" style="${ac?`background:${c.bg};color:${c.c};border-color:${c.b}`:""}" onclick="S.filterArborist='${a}';render()">👷 ${a}</button>`;
+      }).join("")}
+    </div>
+
+    <div class="filter-scroll" style="margin-bottom:14px">
+      ${["All",...STATUSES].map(s=>{
+        const ac=S.filterStatus===s; const c=STATUS_CFG[s];
+        return `<button class="pill-f" style="${ac?(c?`background:${c.bg}33;color:${c.color};border-color:${c.color}88`:`background:#2d4a2d;color:#b8d4b8;border-color:#4a7c4a`):""}" onclick="S.filterStatus='${s}';render()">${c?c.icon+" ":""}${s}</button>`;
+      }).join("")}
+    </div>
+
+    ${filtered.length===0
+      ?`<div style="text-align:center;padding:60px 0">
+          <div style="font-size:48px;margin-bottom:12px">🌲</div>
+          <div style="font-family:var(--serif);font-size:20px;color:#4a6a4a">No jobs found</div>
+          <div style="font-size:14px;color:#3a5a3a;margin-top:6px">Tap + to add your first job</div>
+        </div>`
+      :`<div style="display:flex;flex-direction:column;gap:10px">${filtered.map(job=>{
+          const cut=getMyCut(job); const earned=job.status==="Completed";
+          const failed=["Cancelled","Failed"].includes(job.status);
+          const overdue=isOverdue(job); const today=isToday(job);
+          const aC=job.assignedTo==="John"?"#93c5fd":"#6ee7b7";
+          const remDue=reminderDue(job);
+          const hasPics=(job.photos||[]).length>0;
+          return `
+          <div class="job-row ${failed?"dimmed":""} ${overdue?"overdue":""} ${today&&!overdue?"today-job":""}" onclick="openEdit('${job._id}')" style="padding-bottom:${earned?"42px":"14px"}">
+            <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px">
+              <div style="flex:1;min-width:0">
+                <div style="display:flex;align-items:center;gap:8px;margin-bottom:5px;flex-wrap:wrap">
+                  <div style="font-family:var(--serif);font-size:17px;font-weight:700;color:#c8dcc8;cursor:pointer;text-decoration:underline;text-decoration-color:#2a4a2a;text-underline-offset:3px" onclick="event.stopPropagation();showCustomerHistory('${esc(job.customerName)}')" title="View customer history">${esc(job.customerName)||"Unnamed"}</div>
+                  ${pill(job.status,true)}
+                  ${overdue?`<span style="font-size:9px;font-weight:700;color:var(--red);background:#3a0f0f;padding:1px 5px;border-radius:4px;border:1px solid #7f1d1d">OVERDUE</span>`:""}
+                  ${job.paid?`<span class="paid-badge">💵 PAID</span>`:""}
+                </div>
+                ${job.address?`<div style="font-size:12px;color:var(--muted);margin-bottom:5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(job.address)}</div>`:""}
+                <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
+                  ${job.assignedTo?`<span style="font-size:12px;font-weight:700;color:${aC}">👷 ${job.assignedTo}</span>`:""}
+                  ${job.jobType?`<span style="font-size:12px;color:#7a9e7a">${esc(job.jobType)}</span>`:""}
+                  ${job.dueDate?`<span style="font-size:12px;color:${overdue?"var(--red)":"var(--muted)"}">📅 ${fmtShort(job.dueDate)}</span>`:""}
+                  ${job.phone?`<a href="tel:${esc(job.phone)}" onclick="event.stopPropagation()" style="font-size:12px;color:#4ade80;text-decoration:none;background:#0d3a26;padding:2px 8px;border-radius:6px;border:1px solid #166534">📞</a>`:""}
+                  ${hasPics?`<span style="font-size:12px;color:var(--muted)">📸 ${(job.photos||[]).length}</span>`:""}
+                </div>
+                ${remDue&&!failed?`<div style="margin-top:6px"><span class="remind-badge due">🔔 ${esc(job.remindNote||"Reminder due")}</span></div>`:""}
+                ${failed&&job.failReason?`<div style="font-size:11px;color:#f97316;margin-top:4px">Reason: ${esc(job.failReason)}</div>`:""}
+              </div>
+              <div style="text-align:right;flex-shrink:0;display:flex;flex-direction:column;align-items:flex-end;gap:4px">
+                <div style="font-size:12px;color:var(--muted)">Job: ${fmt(job.jobValue)}</div>
+                <div style="font-size:10px;color:#4a6a4a">My cut:</div>
+                ${failed?`<span style="font-size:12px;color:#6a4a4a">—</span>`
+                  :cut===null?`<span style="font-size:11px;color:#f59e0b;font-style:italic">TBD</span>`
+                  :`<span style="font-family:${earned?"var(--serif)":"var(--sans)"};font-size:${earned?"16px":"14px"};font-weight:700;color:${earned?"#4ade80":"#7a9e7a"}">${earned?"+":"~"}${fmt(cut)}</span>`}
+                <button onclick="event.stopPropagation();duplicateJob('${job._id}')" style="background:transparent;border:none;color:#3a4a3a;cursor:pointer;font-size:15px;padding:4px" title="Duplicate job" onmouseover="this.style.color='#7dcf7d'" onmouseout="this.style.color='#3a4a3a'">⧉</button>
+                <button onclick="event.stopPropagation();S.deleteId='${job._id}';render()" style="background:transparent;border:none;color:#4a3a3a;cursor:pointer;font-size:16px;padding:4px" onmouseover="this.style.color='#ef4444'" onmouseout="this.style.color='#4a3a3a'">✕</button>
+              </div>
+            </div>
+            ${!failed?`<button class="quick-complete" onclick="event.stopPropagation();quickComplete('${job._id}')" title="Mark Complete">✓</button>`:""}
+          </div>`;
+        }).join("")}</div>`}
+  </div>`;
+}
+
+function renderListOnly(){
+  // Lightweight re-render of just the jobs area without full page re-render
+  render();
+}
+
+// ─── FORM ──────────────────────────────────────────────────────
+function renderForm(){
+  const f=S.form;
+  const isJ=f.assignedTo==="John", isP=f.assignedTo==="Patrick";
+  const jCut=f.johnCutOverride?parseFloat(f.johnCutOverride)||0:getJohnCut(f.jobValue);
+  const jLabel=getJohnLabel(f.jobValue);
+  const pExpT=expTotal(f.expenses||{});
+  const pNet=(parseFloat(f.jobValue)||0)-pExpT;
+  const pCut=Math.max(0,pNet/2);
+  const photos=f.photos||[];
+
+  return `<div class="page">
+    <div style="display:flex;gap:10px;align-items:center;margin-bottom:22px">
+      <button class="btn btn-ghost" style="padding:10px 14px;min-height:42px" onclick="setView('list')">←</button>
+      <div style="flex:1">
+        <div style="font-family:var(--serif);font-size:22px;font-weight:700;color:#c8dcc8">${S.editing?"Edit Job":"New Job"}</div>
+        <div style="font-size:12px;color:var(--muted)">${S.editing?"Update job details":"Fill in the details below"}</div>
+      </div>
+      ${S.editing?`<button class="btn btn-ghost btn-sm" onclick="generateQuote()">📄 Quote</button>`:""}
+    </div>
+
+    <div class="form-grid">
+      <!-- Customer -->
+      <div class="card-sm">
+        <div class="section-title">👤 Customer</div>
+        <div style="display:flex;flex-direction:column;gap:13px">
+          <div class="field">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+              <label style="margin-bottom:0">Customer Name *</label>
+              <span id="history-btn-wrap">${f.customerName?`<button onclick="showCustomerHistory('${esc(f.customerName)}')" style="background:transparent;border:none;color:#7dcf7d;font-size:11px;cursor:pointer;font-family:var(--sans);font-weight:700;padding:0">📋 History</button>`:""}</span>
+            </div>
+            <input id="f-name" value="${esc(f.customerName)}" oninput="S.form.customerName=this.value;updateHistoryBtn(this.value)" placeholder="John Smith">
+          </div>
+          <div class="field"><label>Phone</label>
+            <div style="display:flex;gap:8px">
+              <input id="f-phone" type="tel" value="${esc(f.phone||"")}" oninput="S.form.phone=this.value" placeholder="(416) 555-0123" style="flex:1">
+              ${f.phone?`<a href="tel:${esc(f.phone)}" class="btn btn-ghost btn-sm" style="flex-shrink:0;text-decoration:none">📞</a>`:""}
+            </div>
+          </div>
+          <div class="field"><label>Email</label><input id="f-email" type="email" value="${esc(f.email||"")}" oninput="S.form.email=this.value" placeholder="john@email.com"></div>
+          <div class="field"><label>Service Address</label><input id="f-addr" value="${esc(f.address||"")}" oninput="S.form.address=this.value" placeholder="123 Maple St, Toronto, ON"></div>
+        </div>
+      </div>
+
+      <!-- Job Details -->
+      <div class="card-sm">
+        <div class="section-title">🪚 Job Details</div>
+        <div style="display:flex;flex-direction:column;gap:13px">
+          <div class="field"><label>Job Type</label>
+            <select onchange="S.form.jobType=this.value;render()">
+              <option value="">Select job type...</option>
+              ${JOB_TYPES.map(t=>`<option value="${t}" ${f.jobType===t?"selected":""}>${t}</option>`).join("")}
+            </select>
+          </div>
+          <div class="field"><label>Arborist</label>
+            <div class="arb-toggle">
+              <button class="arb-btn ${isJ?"arb-john":""}" onclick="S.form.assignedTo='John';render()">👷 John</button>
+              <button class="arb-btn ${isP?"arb-patrick":""}" onclick="S.form.assignedTo='Patrick';render()">👷 Patrick</button>
+            </div>
+          </div>
+          <div class="field"><label>Status</label>
+            <select onchange="S.form.status=this.value;render()">
+              ${STATUSES.map(s=>`<option value="${s}" ${f.status===s?"selected":""}>${STATUS_CFG[s].icon} ${s}</option>`).join("")}
+            </select>
+          </div>
+          <div class="field"><label>Due Date</label><input id="f-due" type="date" value="${esc(f.dueDate||"")}" oninput="S.form.dueDate=this.value"></div>
+          <div style="display:flex;align-items:center;justify-content:space-between">
+            <div>
+              <div style="font-size:12px;font-weight:700;color:#6a9a6a;text-transform:uppercase;letter-spacing:1px">💵 Paid by Customer</div>
+              <div style="font-size:11px;color:var(--muted);margin-top:2px">Toggle when payment received</div>
+            </div>
+            <button class="toggle ${f.paid?"on":""}" onclick="S.form.paid=!S.form.paid;render()"></button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Financials -->
+      <div class="card-sm">
+        <div class="section-title">💵 Financials</div>
+        <div style="display:flex;flex-direction:column;gap:13px">
+          <div class="field"><label>Total Job Value ($)</label><input id="f-val" type="number" inputmode="decimal" value="${esc(f.jobValue||"")}" oninput="S.form.jobValue=this.value;updateCutPreview()" placeholder="e.g. 2500"></div>
+
+          ${isJ?`
+            ${jLabel?`<div class="tier-badge">📊 Sunny's Rate: ${jLabel}</div>`:""}
+            <div class="field">
+              <label>Override Cut (for $9,000+ jobs)</label>
+              <input id="f-jov" type="number" inputmode="decimal" value="${esc(f.johnCutOverride||"")}" oninput="S.form.johnCutOverride=this.value;updateCutPreview()" placeholder="Leave blank for Sunny's Rates">
+            </div>
+            <div class="cut-preview" id="cut-preview">
+              <div style="font-size:11px;color:var(--muted);margin-bottom:6px;text-transform:uppercase;letter-spacing:.8px;font-weight:700">My Cut (on completion)</div>
+              ${jCut===null&&!f.johnCutOverride
+                ?`<div style="font-size:14px;color:#f59e0b">⚠️ $9,000+ — To be discussed</div>`
+                :`<div style="font-family:var(--serif);font-size:28px;font-weight:700" class="pos">+${fmt(jCut)}</div>`}
+              <div style="font-size:11px;color:var(--muted);margin-top:4px">Paid only when marked Completed</div>
+            </div>`:``}
+
+          ${isP?`
+            <div>
+              <label style="margin-bottom:10px">Expenses to Deduct</label>
+              <div class="two-col">
+                <div class="field"><label>Employee ($)</label><input id="f-emp" type="number" inputmode="decimal" value="${esc((f.expenses||{}).employee||"")}" oninput="S.form.expenses.employee=this.value;updateCutPreview()" placeholder="0"></div>
+                <div class="field"><label>Cleanup Crew ($)</label><input id="f-cl" type="number" inputmode="decimal" value="${esc((f.expenses||{}).cleanup||"")}" oninput="S.form.expenses.cleanup=this.value;updateCutPreview()" placeholder="0"></div>
+                <div class="field"><label>Gas ($)</label><input id="f-gas" type="number" inputmode="decimal" value="${esc((f.expenses||{}).gas||"")}" oninput="S.form.expenses.gas=this.value;updateCutPreview()" placeholder="0"></div>
+                <div class="field"><label>Other ($)</label><input id="f-oth" type="number" inputmode="decimal" value="${esc((f.expenses||{}).other||"")}" oninput="S.form.expenses.other=this.value;updateCutPreview()" placeholder="0"></div>
+              </div>
+            </div>
+            <div class="cut-preview" id="cut-preview">
+              <div class="cut-row"><span style="color:var(--muted)">Job total</span><span>${fmt(f.jobValue)}</span></div>
+              <div class="cut-row"><span style="color:var(--muted)">Total expenses</span><span class="neg">−${fmt(pExpT)}</span></div>
+              <div class="cut-row total"><span style="color:var(--muted)">Net after expenses</span><span>${fmt(pNet)}</span></div>
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px">
+                <span style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;font-weight:700">My Cut (50%)</span>
+                <span style="font-family:var(--serif);font-size:28px;font-weight:700" class="pos">+${fmt(pCut)}</span>
+              </div>
+              <div style="font-size:11px;color:var(--muted);margin-top:4px">Paid only when marked Completed</div>
+            </div>`:``}
+
+          ${!f.assignedTo?`<div style="font-size:13px;color:var(--muted);font-style:italic">Select an arborist above to see your cut calculation</div>`:""}
+        </div>
+      </div>
+
+      <!-- Reminders & Follow-up -->
+      <div class="card-sm">
+        <div class="section-title">🔔 Reminders & Follow-up</div>
+        <div style="display:flex;flex-direction:column;gap:13px">
+          <div class="field"><label>Follow-up Date ${f.status==="Estimate"?"(When to call back)":""}</label><input id="f-fu" type="date" value="${esc(f.followUpDate||"")}" oninput="S.form.followUpDate=this.value"></div>
+          <div class="field"><label>Reminder Date</label><input id="f-rd" type="date" value="${esc(f.remindDate||"")}" oninput="S.form.remindDate=this.value"></div>
+          <div class="field"><label>Reminder Note</label><input id="f-rn" value="${esc(f.remindNote||"")}" oninput="S.form.remindNote=this.value" placeholder="e.g. Call back Thursday, confirm access..."></div>
+        </div>
+      </div>
+
+      <!-- Notes -->
+      <div class="card-sm">
+        <div class="section-title">📝 Notes</div>
+        <textarea id="f-notes" oninput="S.form.notes=this.value" rows="4" placeholder="Special instructions, access notes, hazards, site details...">${esc(f.notes||"")}</textarea>
+        ${["Failed","Cancelled"].includes(f.status)?`
+          <div style="margin-top:12px" class="field">
+            <label>Reason for ${f.status}</label>
+            <textarea id="f-fail" oninput="S.form.failReason=this.value" rows="2" placeholder="e.g. Customer cancelled, couldn't access site...">${esc(f.failReason||"")}</textarea>
+          </div>`:""}
+      </div>
+
+      <!-- Photos -->
+      <div class="card-sm">
+        <div class="section-title">📸 Site Photos (max 3)</div>
+        <div class="photo-grid">
+          ${photos.map((p,i)=>`
+            <div style="position:relative">
+              <img src="${p}" class="photo-thumb" onclick="viewPhotos('${S.editing||"new"}',${i})" alt="Photo ${i+1}">
+              <button onclick="removePhoto(${i})" style="position:absolute;top:3px;right:3px;width:20px;height:20px;border-radius:50%;background:rgba(0,0,0,.7);border:none;color:#f87171;font-size:12px;cursor:pointer;display:flex;align-items:center;justify-content:center">✕</button>
+            </div>`).join("")}
+          ${photos.length<3?`<div class="photo-add" onclick="capturePhoto()"><span style="font-size:22px">📷</span><span>Add Photo</span></div>`:""}
+        </div>
+        <div style="font-size:11px;color:var(--muted);margin-top:8px">Tap to view full size · Tap ✕ to remove</div>
+      </div>
+    </div>
+
+    </div>
+
+    <div style="display:flex;gap:12px;margin-top:20px">
+      <button class="btn btn-ghost" style="flex:1" onclick="setView('list')">Cancel</button>
+      <button class="btn btn-primary" style="flex:2" onclick="submitForm()">${S.editing?"💾 Save Changes":"✅ Create Job"}</button>
+    </div>
+  </div>`;
+}
+
+// ─── QUICK COMPLETE MODAL ──────────────────────────────────────
+function renderQuickComplete(){
+  const j=S.quickCompleteJob; if(!j) return "";
+  const cut=getMyCut(j);
+  return `<div class="overlay" onclick="S.quickCompleteJob=null;render()">
+    <div class="modal-sheet" onclick="event.stopPropagation()">
+      <div style="font-size:32px;text-align:center;margin-bottom:10px">✅</div>
+      <div style="font-family:var(--serif);font-size:20px;font-weight:700;color:#c8dcc8;text-align:center;margin-bottom:4px">Mark Job Complete?</div>
+      <div style="color:var(--muted);text-align:center;font-size:14px;margin-bottom:20px">${esc(j.customerName)} · ${esc(j.jobType||"—")}</div>
+      <div style="background:#0d1f0d;border:1px solid #2a4a2a;border-radius:12px;padding:16px;margin-bottom:20px">
+        <div style="font-size:12px;color:var(--muted);margin-bottom:4px;font-weight:700;text-transform:uppercase;letter-spacing:.8px">Your Cut</div>
+        ${cut===null?`<div style="color:#f59e0b;font-size:14px">⚠️ TBD — please enter manually</div>`
+          :`<div style="font-family:var(--serif);font-size:32px;font-weight:700" class="pos">+${fmt(cut)}</div>`}
+        <div style="font-size:11px;color:var(--muted);margin-top:4px">Job value: ${fmt(j.jobValue)} · Arborist: ${j.assignedTo||"—"}</div>
+        ${j.assignedTo==="Patrick"&&j.expenses?`<div style="font-size:11px;color:var(--muted);margin-top:2px">Expenses: ${fmt(expTotal(j.expenses))} deducted</div>`:""}
+      </div>
+      <div style="margin-bottom:16px" class="field">
+        <label>Mark as Paid? (Toggle if customer has paid)</label>
+        <div class="toggle-wrap">
+          <span style="font-size:14px;color:var(--text-mid)">Customer has paid</span>
+          <button class="toggle ${j._tempPaid?"on":""}" onclick="S.quickCompleteJob={...S.quickCompleteJob,_tempPaid:!S.quickCompleteJob._tempPaid};render()"></button>
+        </div>
+      </div>
+      <div style="display:flex;gap:12px">
+        <button class="btn btn-ghost" style="flex:1" onclick="S.quickCompleteJob=null;render()">Cancel</button>
+        <button class="btn btn-success" style="flex:2;font-size:15px;min-height:48px" onclick="confirmQuickComplete()">✅ Confirm Complete</button>
+      </div>
+      <button class="btn btn-ghost" style="width:100%;margin-top:10px;font-size:13px" onclick="openEdit('${j._id}')">✏️ Edit Full Job Details</button>
+    </div>
+  </div>`;
+}
+
+// ─── DELETE MODAL ──────────────────────────────────────────────
+function renderDeleteModal(){
+  return `<div class="overlay" onclick="S.deleteId=null;render()">
+    <div class="modal-sheet" onclick="event.stopPropagation()">
+      <div style="font-size:36px;text-align:center;margin-bottom:12px">🗑️</div>
+      <div style="font-family:var(--serif);font-size:20px;font-weight:700;color:#c8dcc8;text-align:center;margin-bottom:8px">Delete this job?</div>
+      <div style="color:var(--muted);text-align:center;margin-bottom:24px;font-size:14px">This cannot be undone.</div>
+      <div style="display:flex;gap:12px">
+        <button class="btn btn-ghost" style="flex:1" onclick="S.deleteId=null;render()">Cancel</button>
+        <button class="btn btn-danger" style="flex:1" onclick="doDelete()">Delete</button>
+      </div>
+    </div>
+  </div>`;
+}
+
+// ─── PHOTO VIEWER ──────────────────────────────────────────────
+function renderPhotoViewer(){
+  const j=S.photoViewerJob; if(!j) return "";
+  const photos=j===S.form?S.form.photos:j.photos||[];
+  const p=photos[S.photoViewerIdx];
+  return `<div class="overlay" onclick="S.photoViewerJob=null;render()">
+    <div class="modal-sheet" onclick="event.stopPropagation()" style="padding:20px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+        <div style="font-size:14px;color:var(--muted)">Photo ${S.photoViewerIdx+1} of ${photos.length}</div>
+        <button class="btn btn-ghost btn-sm" onclick="S.photoViewerJob=null;render()">✕ Close</button>
+      </div>
+      <img src="${p}" class="photo-viewer-img" alt="Site photo">
+      ${photos.length>1?`<div style="display:flex;gap:8px;justify-content:center">
+        ${photos.map((_,i)=>`<button class="btn btn-ghost btn-sm" style="min-height:34px;${S.photoViewerIdx===i?"border-color:var(--green);color:#7dcf7d":""}" onclick="S.photoViewerIdx=${i};render()">${i+1}</button>`).join("")}
+      </div>`:""}
+    </div>
+  </div>`;
+}
+
+// ─── SETTINGS ──────────────────────────────────────────────────
+function renderSettings(){
+  return `<div class="page">
+    <div style="font-family:var(--serif);font-size:24px;font-weight:700;color:#c8dcc8;margin-bottom:2px">Settings</div>
+    <div style="color:var(--muted);font-size:13px;margin-bottom:24px">Manage your CRM</div>
+
+    <div class="card-sm" style="margin-bottom:14px">
+      <div class="section-title">🔥 Firebase</div>
+      <div style="font-size:13px;color:#4ade80;margin-bottom:16px">✅ Connected & syncing in real-time</div>
+      <button class="btn btn-ghost" style="width:100%" onclick="disconnectFB()">🔌 Disconnect / Switch Firebase Project</button>
+    </div>
+
+    <div class="card-sm" style="margin-bottom:14px">
+      <div class="section-title">📊 Export</div>
+      <button class="btn btn-primary" style="width:100%;margin-bottom:10px" onclick="exportExcel()">📥 Export All Jobs to Excel (.xlsx)</button>
+      <div style="font-size:12px;color:var(--muted);margin-bottom:12px">Includes all job data + summary sheet with total earnings by arborist</div>
+      <button class="btn btn-ghost" style="width:100%" onclick="exportLeads()">📤 Export Leads to Excel (.xlsx)</button>
+    </div>
+
+    <div class="card-sm" style="margin-bottom:14px">
+      <div class="section-title">📄 PDF Quotes</div>
+      <div style="font-size:13px;color:var(--muted);line-height:1.7">Open any job, tap <strong style="color:var(--text-mid)">📄 Quote</strong> in the top right to generate a professional PDF quote to send to your customer.</div>
+    </div>
+
+    <div class="card-sm">
+      <div class="section-title">ℹ️ App Info</div>
+      <div style="font-size:13px;color:var(--muted);line-height:1.8">
+        <div>📱 <strong style="color:var(--text-mid)">Android:</strong> Add to Home Screen via Chrome menu</div>
+        <div>💻 <strong style="color:var(--text-mid)">Windows:</strong> Install via Chrome address bar button</div>
+        <div>🔄 <strong style="color:var(--text-mid)">Sync:</strong> Real-time across all devices</div>
+        <div>✈️ <strong style="color:var(--text-mid)">Offline:</strong> Works without internet, syncs on reconnect</div>
+      </div>
+    </div>
+  </div>`;
+}
+
+// ─── SETUP ─────────────────────────────────────────────────────
+function renderSetup(){
+  return `<div class="setup-screen">
+    <div style="font-size:48px;margin-bottom:14px;text-align:center">🌳</div>
+    <div style="font-family:var(--serif);font-size:26px;font-weight:900;color:#b8d4b8;text-align:center;margin-bottom:4px">Toronto Tree Services</div>
+    <div style="font-size:14px;color:var(--muted);text-align:center;margin-bottom:28px">First-time setup — connect to your database</div>
+    <div class="setup-card">
+      <div style="font-family:var(--serif);font-size:18px;font-weight:700;color:#c8dcc8;margin-bottom:14px">🔥 Paste Your Firebase Config</div>
+      <div style="font-size:13px;color:var(--muted);margin-bottom:14px;line-height:1.6">Follow the setup guide to get this from Firebase console. It looks like a block of text starting with <code style="color:#7dcf7d;background:#1a2e1a;padding:1px 5px;border-radius:4px">{"apiKey":"..."}</code></div>
+      <div class="field" style="margin-bottom:14px">
+        <label>Firebase Config JSON</label>
+        <textarea id="fb-in" rows="7" placeholder='{&#10;  "apiKey": "AIza...",&#10;  "authDomain": "your-project.firebaseapp.com",&#10;  "projectId": "your-project-id",&#10;  "storageBucket": "your-project.appspot.com",&#10;  "messagingSenderId": "123456789",&#10;  "appId": "1:123456789:web:abc123"&#10;}' style="font-family:monospace;font-size:13px"></textarea>
+      </div>
+      <div id="fb-err" style="color:#f87171;font-size:13px;margin-bottom:12px;display:none"></div>
+      <button class="btn btn-primary" style="width:100%" onclick="connectFB()">🔗 Connect & Open CRM</button>
+      <div style="margin-top:20px;padding-top:16px;border-top:1px solid var(--border)">
+        <div style="font-size:12px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.8px;margin-bottom:10px">5-Minute Setup</div>
+        ${[["Go to","console.firebase.google.com"],["Create","new project → 'toronto-tree-crm'"],["Click","Firestore Database → Create → Test mode"],["Click","⚙️ Settings → Your apps → </> Web → Register"],["Copy","the firebaseConfig object → paste above"]].map((s,i)=>`
+        <div class="setup-step">
+          <div class="step-num">${i+1}</div>
+          <div style="font-size:13px"><span style="color:var(--green-bright);font-weight:700">${s[0]}</span> <span style="color:var(--text-mid)">${s[1]}</span></div>
+        </div>`).join("")}
+      </div>
+    </div>
+  </div>`;
+}
+
+// ═══════════════════════════════════════════════════════════════
+// ACTIONS
+// ═══════════════════════════════════════════════════════════════
+function setView(v){ S.view=v; render(); window.scrollTo(0,0); }
+function toggleMonthly(){ S.showMonthly=!S.showMonthly; render(); }
+
+function openNew(){
+  S.form={...JOB0,expenses:{...EXP0},photos:[]};
+  S.editing=null; setView("form");
+}
+function openEdit(id){
+  const j=jobs.find(j=>j._id===id); if(!j) return;
+  S.form={...JOB0,...j,expenses:{...EXP0,...(j.expenses||{})},photos:[...(j.photos||[])]};
+  S.editing=id; setView("form");
+}
+async function submitForm(){
+  if(!S.form.customerName.trim()){alert("Please enter a customer name");return;}
+  try{
+    await dbSave({...S.form});
+    setView("list"); showToast(S.editing?"Job updated ✓":"Job created ✓");
+  }catch(e){ console.error(e); showToast("Error saving job","error"); }
+}
+async function doDelete(){
+  if(!S.deleteId) return;
+  try{ await dbDelete(S.deleteId); S.deleteId=null; showToast("Job deleted"); }
+  catch(e){ showToast("Error deleting","error"); }
+}
+function quickComplete(id){
+  const j=jobs.find(j=>j._id===id); if(!j) return;
+  S.quickCompleteJob={...j,_tempPaid:j.paid||false};
+  render();
+}
+async function confirmQuickComplete(){
+  const j=S.quickCompleteJob; if(!j) return;
+  const id=j._id;
+  try{
+    await dbPatch(id,{status:"Completed",paid:j._tempPaid||false});
+    S.quickCompleteJob=null;
+    showToast(`✅ ${j.customerName} marked complete!`);
+  }catch(e){ showToast("Error","error"); }
+}
+
+function updateCutPreview(){
+  const el=document.getElementById("cut-preview"); if(!el) return;
+  const f=S.form;
+  const isJ=f.assignedTo==="John", isP=f.assignedTo==="Patrick";
+  if(isJ){
+    const c=f.johnCutOverride?parseFloat(f.johnCutOverride)||0:getJohnCut(f.jobValue);
+    el.innerHTML=`<div style="font-size:11px;color:var(--muted);margin-bottom:6px;text-transform:uppercase;letter-spacing:.8px;font-weight:700">My Cut (on completion)</div>
+      ${c===null&&!f.johnCutOverride?`<div style="font-size:14px;color:#f59e0b">⚠️ $9,000+ — To be discussed</div>`:`<div style="font-family:var(--serif);font-size:28px;font-weight:700;color:#4ade80">+${fmt(c)}</div>`}
+      <div style="font-size:11px;color:var(--muted);margin-top:4px">Paid only when marked Completed</div>`;
+  }
+  if(isP){
+    const exp=expTotal(f.expenses||{});
+    const net=(parseFloat(f.jobValue)||0)-exp;
+    const cut=Math.max(0,net/2);
+    el.innerHTML=`<div class="cut-row"><span style="color:var(--muted)">Job total</span><span>${fmt(f.jobValue)}</span></div>
+      <div class="cut-row"><span style="color:var(--muted)">Expenses</span><span style="color:#f87171">−${fmt(exp)}</span></div>
+      <div class="cut-row total"><span style="color:var(--muted)">Net</span><span>${fmt(net)}</span></div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px">
+        <span style="font-size:11px;color:var(--muted);text-transform:uppercase;font-weight:700">My Cut (50%)</span>
+        <span style="font-family:var(--serif);font-size:28px;font-weight:700;color:#4ade80">+${fmt(cut)}</span>
+      </div>`;
+  }
+}
+
+
+
+// ═══════════════════════════════════════════════════════════════
+// EARNINGS PAGE
+// ═══════════════════════════════════════════════════════════════
+
+// ── Date range helpers ─────────────────────────────────────────
+function getDateRange(period){
+  const now = new Date();
+  const y = now.getFullYear(), m = now.getMonth(), d = now.getDate();
+
+  // week starts Monday
+  const dow = now.getDay(); // 0=Sun
+  const diffMon = dow===0 ? -6 : 1-dow;
+
+  switch(period){
+    case "thisWeek":{
+      const s=new Date(y,m,d+diffMon); s.setHours(0,0,0,0);
+      const e=new Date(s); e.setDate(s.getDate()+6); e.setHours(23,59,59,999);
+      return {s,e,label:"This Week"};
+    }
+    case "lastWeek":{
+      const s=new Date(y,m,d+diffMon-7); s.setHours(0,0,0,0);
+      const e=new Date(s); e.setDate(s.getDate()+6); e.setHours(23,59,59,999);
+      return {s,e,label:"Last Week"};
+    }
+    case "thisMonth":{
+      const s=new Date(y,m,1); s.setHours(0,0,0,0);
+      const e=new Date(y,m+1,0); e.setHours(23,59,59,999);
+      return {s,e,label:now.toLocaleDateString("en-CA",{month:"long",year:"numeric"})};
+    }
+    case "lastMonth":{
+      const s=new Date(y,m-1,1); s.setHours(0,0,0,0);
+      const e=new Date(y,m,0); e.setHours(23,59,59,999);
+      const l=new Date(y,m-1,1);
+      return {s,e,label:l.toLocaleDateString("en-CA",{month:"long",year:"numeric"})};
+    }
+    case "thisYear":{
+      const s=new Date(y,0,1); s.setHours(0,0,0,0);
+      const e=new Date(y,11,31); e.setHours(23,59,59,999);
+      return {s,e,label:`Year ${y}`};
+    }
+    case "lastYear":{
+      const s=new Date(y-1,0,1); s.setHours(0,0,0,0);
+      const e=new Date(y-1,11,31); e.setHours(23,59,59,999);
+      return {s,e,label:`Year ${y-1}`};
+    }
+    case "allTime":{
+      return {s:new Date(0),e:new Date(9999,0),label:"All Time"};
+    }
+  }
+  return {s:new Date(0),e:new Date(),label:period};
+}
+
+// Previous period for comparison
+function getPrevRange(period){
+  switch(period){
+    case "thisWeek":   return getDateRange("lastWeek");
+    case "lastWeek":   return null;
+    case "thisMonth":  return getDateRange("lastMonth");
+    case "lastMonth":  return null;
+    case "thisYear":   return getDateRange("lastYear");
+    case "lastYear":   return null;
+    case "allTime":    return null;
+  }
+  return null;
+}
+
+function jobsInRange(range){
+  return jobs.filter(j=>{
+    if(j.status!=="Completed" || !j.dueDate) return false;
+    const d=new Date(j.dueDate+"T00:00:00");
+    return d>=range.s && d<=range.e;
+  });
+}
+
+function earningsForJobs(jList){
+  return jList.reduce((s,j)=>s+getEarned(j),0);
+}
+
+function renderEarnings(){
+  const periods=[
+    {id:"thisWeek", label:"This Week"},
+    {id:"lastWeek", label:"Last Week"},
+    {id:"thisMonth",label:"This Month"},
+    {id:"lastMonth",label:"Last Month"},
+    {id:"thisYear", label:"This Year"},
+    {id:"lastYear", label:"Last Year"},
+    {id:"allTime",  label:"All Time"},
+  ];
+
+  const range   = getDateRange(S.earningsPeriod);
+  const prevRange = getPrevRange(S.earningsPeriod);
+  const pJobs   = jobsInRange(range);
+  const earned  = earningsForJobs(pJobs);
+  const johnJ   = pJobs.filter(j=>j.assignedTo==="John");
+  const patJ    = pJobs.filter(j=>j.assignedTo==="Patrick");
+  const johnEarned = earningsForJobs(johnJ);
+  const patEarned  = earningsForJobs(patJ);
+  const totalJobVal= pJobs.reduce((s,j)=>s+(parseFloat(j.jobValue)||0),0);
+  const unpaid     = pJobs.filter(j=>!j.paid).length;
+  const avgCut     = pJobs.length ? earned/pJobs.length : 0;
+
+  // comparison
+  let prevEarned=null, changePct=null, changeDir=null;
+  if(prevRange){
+    const prevJobs=jobsInRange(prevRange);
+    prevEarned=earningsForJobs(prevJobs);
+    if(prevEarned>0){
+      changePct=Math.round(((earned-prevEarned)/prevEarned)*100);
+      changeDir=earned>=prevEarned?"up":"down";
+    } else if(earned>0){
+      changePct=100; changeDir="up";
+    }
+  }
+
+  // monthly bars for this year
+  const thisY=new Date().getFullYear();
+  const monthBars=Array.from({length:12},(_,i)=>{
+    const r=getDateRange("allTime");
+    r.s=new Date(thisY,i,1); r.s.setHours(0,0,0,0);
+    r.e=new Date(thisY,i+1,0); r.e.setHours(23,59,59,999);
+    const mj=jobsInRange(r);
+    return {month:new Date(thisY,i,1).toLocaleDateString("en-CA",{month:"short"}),earned:earningsForJobs(mj),count:mj.length};
+  });
+  const maxBar=Math.max(...monthBars.map(b=>b.earned),1);
+
+  // calc state
+  const cVal=parseFloat(S.calcJobValue)||0;
+  const cExpTotal=(parseFloat(S.calcEmpExp)||0)+(parseFloat(S.calcCleanExp)||0)+(parseFloat(S.calcGasExp)||0)+(parseFloat(S.calcOtherExp)||0);
+  const cJohnCut = S.calcArborist==="John" ? getJohnCut(cVal) : null;
+  const cJohnLabel = S.calcArborist==="John" ? getJohnLabel(cVal) : null;
+  const cPatNet = cVal - cExpTotal;
+  const cPatCut = S.calcArborist==="Patrick" ? Math.max(0,cPatNet/2) : null;
+
+  return `<div class="page">
+    <div style="font-family:var(--serif);font-size:24px;font-weight:700;color:#c8dcc8;margin-bottom:2px">💰 Earnings</div>
+    <div style="color:var(--muted);font-size:13px;margin-bottom:16px">Your cut only — completed jobs</div>
+
+    <!-- Period selector -->
+    <div class="filter-scroll" style="margin-bottom:18px;gap:8px">
+      ${periods.map(p=>`
+        <button class="pill-f" style="${S.earningsPeriod===p.id?"background:linear-gradient(135deg,#1a3a1a,#162516);color:#7dcf7d;border-color:#4a7c4a":""}"
+          onclick="S.earningsPeriod='${p.id}';render()">${p.label}</button>`).join("")}
+    </div>
+
+    <!-- Hero earnings card -->
+    <div style="background:linear-gradient(135deg,#0d2a0d,#0f1f0f);border:1px solid #2a5a2a;border-radius:16px;padding:22px;margin-bottom:14px;position:relative;overflow:hidden">
+      <div style="position:absolute;top:-20px;right:-20px;font-size:100px;opacity:.04;pointer-events:none">💰</div>
+      <div style="font-size:12px;font-weight:700;color:var(--green-light);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">${range.label}</div>
+      <div style="font-family:var(--serif);font-size:44px;font-weight:900;color:#4ade80;line-height:1">${fmt(earned)}</div>
+      <div style="font-size:13px;color:var(--muted);margin-top:6px">${pJobs.length} completed job${pJobs.length!==1?"s":""} · Avg cut ${fmt(avgCut)}</div>
+
+      ${changePct!==null?`
+      <div style="margin-top:12px;display:inline-flex;align-items:center;gap:6px;background:${changeDir==="up"?"#0d3a2655":"#3a0d0d55"};border:1px solid ${changeDir==="up"?"#10b98144":"#ef444444"};border-radius:8px;padding:6px 12px">
+        <span style="font-size:16px">${changeDir==="up"?"📈":"📉"}</span>
+        <span style="font-size:13px;font-weight:700;color:${changeDir==="up"?"#4ade80":"#f87171"}">${changeDir==="up"?"+":""}${changePct}% vs ${prevRange.label}</span>
+        <span style="font-size:12px;color:var(--muted)">(${fmt(prevEarned)})</span>
+      </div>`:""}
+    </div>
+
+    <!-- Stats row -->
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:14px">
+      <div class="card" style="padding:14px;text-align:center">
+        <div style="font-family:var(--serif);font-size:22px;font-weight:700;color:#b8d4b8">${fmt(totalJobVal)}</div>
+        <div style="font-size:10px;color:var(--muted);font-weight:700;text-transform:uppercase;margin-top:3px">Total Job Value</div>
+      </div>
+      <div class="card" style="padding:14px;text-align:center">
+        <div style="font-family:var(--serif);font-size:22px;font-weight:700;color:#b8d4b8">${pJobs.length}</div>
+        <div style="font-size:10px;color:var(--muted);font-weight:700;text-transform:uppercase;margin-top:3px">Jobs Done</div>
+      </div>
+      <div class="card" style="padding:14px;text-align:center;${unpaid>0?"border-color:#f59e0b44":""}">
+        <div style="font-family:var(--serif);font-size:22px;font-weight:700;color:${unpaid>0?"#fbbf24":"#b8d4b8"}">${unpaid}</div>
+        <div style="font-size:10px;color:${unpaid>0?"#f59e0b":"var(--muted)"};font-weight:700;text-transform:uppercase;margin-top:3px">Unpaid 💸</div>
+      </div>
+    </div>
+
+    <!-- John vs Patrick breakdown -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
+      <div style="background:#1e3a5f33;border:1px solid #3b82f644;border-radius:12px;padding:14px">
+        <div style="font-size:11px;color:#93c5fd;font-weight:700;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">👷 John</div>
+        <div style="font-family:var(--serif);font-size:24px;font-weight:700;color:#4ade80">${fmt(johnEarned)}</div>
+        <div style="font-size:12px;color:#5a7a9a;margin-top:4px">${johnJ.length} jobs</div>
+      </div>
+      <div style="background:#0d3a2633;border:1px solid #10b98144;border-radius:12px;padding:14px">
+        <div style="font-size:11px;color:#6ee7b7;font-weight:700;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">👷 Patrick</div>
+        <div style="font-family:var(--serif);font-size:24px;font-weight:700;color:#4ade80">${fmt(patEarned)}</div>
+        <div style="font-size:12px;color:#3a7a5a;margin-top:4px">${patJ.length} jobs</div>
+      </div>
+    </div>
+
+    <!-- Completed jobs list for this period -->
+    ${pJobs.length?`
+    <div class="card-sm" style="margin-bottom:14px">
+      <div class="section-title">${range.label} — Job Breakdown</div>
+      ${pJobs.sort((a,b)=>new Date(b.dueDate)-new Date(a.dueDate)).map(j=>{
+        const cut=getEarned(j);
+        const arbC=j.assignedTo==="John"?"#93c5fd":"#6ee7b7";
+        return `<div onclick="openEdit('${j._id}')" style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid #1e3a1e;cursor:pointer;gap:8px">
+          <div style="flex:1;min-width:0">
+            <div style="font-size:13px;font-weight:700;color:#c8dcc8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(j.customerName)}</div>
+            <div style="font-size:11px;color:var(--muted)">${fmtShort(j.dueDate)} · ${esc(j.jobType||"—")} · <span style="color:${arbC}">${esc(j.assignedTo||"—")}</span></div>
+          </div>
+          <div style="text-align:right;flex-shrink:0">
+            <div style="font-size:14px;font-weight:700;color:#4ade80">+${fmt(cut)}</div>
+            <div style="font-size:11px;color:var(--muted)">${fmt(j.jobValue)} job</div>
+            ${!j.paid?`<div style="font-size:10px;color:#f59e0b">💸 unpaid</div>`:""}
+          </div>
+        </div>`;
+      }).join("")}
+    </div>`:""}
+
+    <!-- Monthly bar chart (always shows current year) -->
+    <div class="card-sm" style="margin-bottom:14px">
+      <div class="section-title">📊 ${thisY} — Month by Month</div>
+      ${monthBars.map(b=>`
+      <div class="month-bar-wrap">
+        <div style="font-size:11px;color:var(--muted);width:28px;flex-shrink:0">${b.month}</div>
+        <div class="month-bar-bg" style="flex:1">
+          <div class="month-bar" style="width:${b.earned?Math.max(4,(b.earned/maxBar)*100):0}%;background:${b.earned>0?"linear-gradient(90deg,#4a7c4a,#7dcf7d)":"#1a2e1a"}"></div>
+        </div>
+        <div style="font-size:11px;font-weight:700;color:${b.earned>0?"#7dcf7d":"#2a4a2a"};width:54px;text-align:right;flex-shrink:0">${b.earned>0?fmt(b.earned):"—"}</div>
+        <div style="font-size:10px;color:var(--muted);width:18px;text-align:right;flex-shrink:0">${b.count>0?b.count+"j":""}</div>
+      </div>`).join("")}
+    </div>
+
+    <!-- ── CUT CALCULATOR ── -->
+    <div style="background:linear-gradient(135deg,#1a1a0d,#161608);border:1px solid #4a4a1a;border-radius:16px;padding:20px;margin-bottom:14px">
+      <div style="font-size:13px;font-weight:700;color:#fbbf24;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px">🧮 Cut Calculator</div>
+      <div style="font-size:12px;color:var(--muted);margin-bottom:16px">Enter a job value — see your cut before creating the job</div>
+
+      <!-- Arborist toggle -->
+      <div class="arb-toggle" style="margin-bottom:14px">
+        <button class="arb-btn ${S.calcArborist==="John"?"arb-john":""}" onclick="S.calcArborist='John';render()">👷 John</button>
+        <button class="arb-btn ${S.calcArborist==="Patrick"?"arb-patrick":""}" onclick="S.calcArborist='Patrick';render()">👷 Patrick</button>
+      </div>
+
+      <!-- Job value input -->
+      <div class="field" style="margin-bottom:14px">
+        <label>Job Value ($)</label>
+        <input type="number" inputmode="decimal" id="calc-val" value="${esc(S.calcJobValue)}"
+          oninput="S.calcJobValue=this.value;updateCalc()"
+          placeholder="e.g. 3500" style="font-size:18px;font-weight:700">
+      </div>
+
+      <!-- Patrick expenses -->
+      ${S.calcArborist==="Patrick"?`
+      <div class="two-col" style="margin-bottom:14px">
+        <div class="field"><label>Employee ($)</label><input type="number" inputmode="decimal" id="calc-emp" value="${esc(S.calcEmpExp)}" oninput="S.calcEmpExp=this.value;updateCalc()" placeholder="0"></div>
+        <div class="field"><label>Cleanup ($)</label><input type="number" inputmode="decimal" id="calc-cl" value="${esc(S.calcCleanExp)}" oninput="S.calcCleanExp=this.value;updateCalc()" placeholder="0"></div>
+        <div class="field"><label>Gas ($)</label><input type="number" inputmode="decimal" id="calc-gas" value="${esc(S.calcGasExp)}" oninput="S.calcGasExp=this.value;updateCalc()" placeholder="0"></div>
+        <div class="field"><label>Other ($)</label><input type="number" inputmode="decimal" id="calc-oth" value="${esc(S.calcOtherExp)}" oninput="S.calcOtherExp=this.value;updateCalc()" placeholder="0"></div>
+      </div>`:""}
+
+      <!-- Result display -->
+      <div id="calc-result" style="background:#0d0d07;border:1px solid #4a4a1a;border-radius:12px;padding:16px">
+        ${renderCalcResult(cVal, cExpTotal, cJohnCut, cJohnLabel, cPatCut, cPatNet)}
+      </div>
+
+      ${cVal>0?`<button class="btn btn-primary" style="width:100%;margin-top:12px;font-size:14px"
+        onclick="openNewFromCalc()">➕ Create This Job</button>`:""}
+    </div>
+  </div>`;
+}
+
+function renderCalcResult(cVal, cExpTotal, cJohnCut, cJohnLabel, cPatCut, cPatNet){
+  if(!cVal) return `<div style="font-size:13px;color:var(--muted);text-align:center;padding:8px">Enter a job value above to see your cut</div>`;
+
+  if(S.calcArborist==="John"){
+    return `
+      ${cJohnLabel?`<div style="font-size:12px;color:#6a9a6a;margin-bottom:8px">📊 ${cJohnLabel}</div>`:""}
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+        <span style="font-size:13px;color:var(--muted)">Job value</span>
+        <span style="font-size:13px;color:var(--text)">${fmt(cVal)}</span>
+      </div>
+      <div style="border-top:1px solid #2a2a0a;padding-top:10px;display:flex;justify-content:space-between;align-items:center">
+        <span style="font-size:14px;font-weight:700;color:#fbbf24">Your Cut (Sunny's Rate)</span>
+        ${cJohnCut!==null
+          ?`<span style="font-family:var(--serif);font-size:32px;font-weight:900;color:#4ade80">+${fmt(cJohnCut)}</span>`
+          :`<span style="font-size:14px;color:#f59e0b">⚠️ $9k+ — discuss with Sunny</span>`}
+      </div>`;
+  }
+
+  if(S.calcArborist==="Patrick"){
+    return `
+      <div style="display:flex;justify-content:space-between;margin-bottom:6px">
+        <span style="font-size:13px;color:var(--muted)">Job value</span>
+        <span style="font-size:13px">${fmt(cVal)}</span>
+      </div>
+      ${cExpTotal>0?`
+      <div style="display:flex;justify-content:space-between;margin-bottom:6px">
+        <span style="font-size:13px;color:var(--muted)">Total expenses</span>
+        <span style="font-size:13px;color:#f87171">−${fmt(cExpTotal)}</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;margin-bottom:8px">
+        <span style="font-size:13px;color:var(--muted)">Net (after expenses)</span>
+        <span style="font-size:13px">${fmt(cPatNet)}</span>
+      </div>`:""}
+      <div style="border-top:1px solid #2a2a0a;padding-top:10px;display:flex;justify-content:space-between;align-items:center">
+        <span style="font-size:14px;font-weight:700;color:#fbbf24">Your Cut (50% of net)</span>
+        <span style="font-family:var(--serif);font-size:32px;font-weight:900;color:#4ade80">+${fmt(cPatCut)}</span>
+      </div>`;
+  }
+  return "";
+}
+
+function updateCalc(){
+  if(!db) return;
+  const cVal=parseFloat(S.calcJobValue)||0;
+  const cExpTotal=(parseFloat(S.calcEmpExp)||0)+(parseFloat(S.calcCleanExp)||0)+(parseFloat(S.calcGasExp)||0)+(parseFloat(S.calcOtherExp)||0);
+  const cJohnCut=S.calcArborist==="John"?getJohnCut(cVal):null;
+  const cJohnLabel=S.calcArborist==="John"?getJohnLabel(cVal):null;
+  const cPatNet=cVal-cExpTotal;
+  const cPatCut=S.calcArborist==="Patrick"?Math.max(0,cPatNet/2):null;
+  const el=document.getElementById("calc-result");
+  if(el) el.innerHTML=renderCalcResult(cVal,cExpTotal,cJohnCut,cJohnLabel,cPatCut,cPatNet);
+  // show/hide create button without full re-render
+  const createBtn=document.querySelector("[onclick*='openNewFromCalc']");
+  if(!createBtn&&cVal>0){render();} // need to show the button
+}
+
+function openNewFromCalc(){
+  S.form={...JOB0,expenses:{...EXP0},photos:[],
+    jobValue:S.calcJobValue,
+    assignedTo:S.calcArborist,
+    expenses:{
+      employee:S.calcEmpExp||"",
+      cleanup:S.calcCleanExp||"",
+      gas:S.calcGasExp||"",
+      other:S.calcOtherExp||"",
+    }
+  };
+  S.editing=null;
+  setView("form");
+}
+
+// ═══════════════════════════════════════════════════════════════
+// CUSTOMER HISTORY
+// ═══════════════════════════════════════════════════════════════
+function showCustomerHistory(name){
+  if(!name||name==="Unnamed") return;
+  S.customerHistoryName = name;
+  render();
+}
+
+function renderCustomerHistory(){
+  const name = S.customerHistoryName;
+  const cJobs = jobs.filter(j=>(j.customerName||"").toLowerCase()===name.toLowerCase())
+                    .sort((a,b)=>new Date(b.dueDate||0)-new Date(a.dueDate||0));
+  const totalEarned  = cJobs.filter(j=>j.status==="Completed").reduce((s,j)=>s+getEarned(j),0);
+  const totalJobVal  = cJobs.reduce((s,j)=>s+(parseFloat(j.jobValue)||0),0);
+  const lastPhone    = cJobs.find(j=>j.phone)?.phone||"";
+  const lastAddr     = cJobs.find(j=>j.address)?.address||"";
+
+  return `<div class="overlay" onclick="S.customerHistoryName=null;render()" style="position:fixed;z-index:110">
+    <div class="modal-sheet" onclick="event.stopPropagation()" style="max-width:500px;max-height:88vh;overflow-y:auto">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:16px">
+        <div>
+          <div style="font-family:var(--serif);font-size:22px;font-weight:700;color:#c8dcc8">${esc(name)}</div>
+          <div style="font-size:12px;color:var(--muted);margin-top:2px">${cJobs.length} job${cJobs.length!==1?"s":""} total</div>
+        </div>
+        <button class="btn btn-ghost btn-sm" onclick="S.customerHistoryName=null;render()">✕</button>
+      </div>
+
+      <!-- Quick contact -->
+      ${lastPhone||lastAddr?`
+      <div style="background:#0d180d;border:1px solid var(--border);border-radius:10px;padding:12px;margin-bottom:16px;font-size:13px">
+        ${lastPhone?`<div style="margin-bottom:4px"><a href="tel:${esc(lastPhone)}" style="color:#4ade80;text-decoration:none">📞 ${esc(lastPhone)}</a></div>`:""}
+        ${lastAddr?`<div style="color:var(--muted)">📍 ${esc(lastAddr)}</div>`:""}
+      </div>`:""}
+
+      <!-- Stats row -->
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px">
+        ${[
+          {label:"Jobs",value:cJobs.length},
+          {label:"Job Value",value:fmt(totalJobVal)},
+          {label:"My Earnings",value:fmt(totalEarned)},
+        ].map(s=>`<div style="background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:10px;text-align:center">
+          <div style="font-family:var(--serif);font-size:18px;font-weight:700;color:#b8d4b8">${s.value}</div>
+          <div style="font-size:10px;color:var(--muted);font-weight:700;text-transform:uppercase;margin-top:2px">${s.label}</div>
+        </div>`).join("")}
+      </div>
+
+      <!-- Job history list -->
+      <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;margin-bottom:10px">Job History</div>
+      ${cJobs.length===0
+        ?`<div style="color:var(--muted);font-size:14px;text-align:center;padding:20px 0">No jobs found for this customer</div>`
+        :cJobs.map(j=>{
+          const cut=getEarned(j);
+          const arbC=j.assignedTo==="John"?"#93c5fd":"#6ee7b7";
+          return `<div onclick="S.customerHistoryName=null;openEdit('${j._id}')" style="background:var(--card);border:1px solid var(--border);border-radius:10px;padding:12px 14px;margin-bottom:8px;cursor:pointer">
+            <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px">
+              <div style="flex:1;min-width:0">
+                <div style="display:flex;gap:8px;align-items:center;margin-bottom:4px;flex-wrap:wrap">
+                  <span style="font-size:13px;font-weight:700;color:var(--text-mid)">${esc(j.jobType||"—")}</span>
+                  ${pill(j.status,true)}
+                </div>
+                <div style="font-size:12px;color:var(--muted)">${fmtFull(j.dueDate)} · <span style="color:${arbC}">👷 ${esc(j.assignedTo||"—")}</span></div>
+              </div>
+              <div style="text-align:right;flex-shrink:0">
+                <div style="font-size:13px;font-weight:700;color:#c8dcc8">${fmt(j.jobValue)}</div>
+                ${j.status==="Completed"?`<div style="font-size:11px;color:#4ade80">+${fmt(cut)} earned</div>`:""}
+              </div>
+            </div>
+          </div>`;
+        }).join("")}
+
+      <button class="btn btn-primary" style="width:100%;margin-top:8px" onclick="S.customerHistoryName=null;openNew();S.form.customerName='${esc(name)}';S.form.phone='${esc(lastPhone)}';S.form.address='${esc(lastAddr)}';render()">
+        ➕ New Job for ${esc(name)}
+      </button>
+    </div>
+  </div>`;
+}
+
+// ═══════════════════════════════════════════════════════════════
+// DUPLICATE JOB
+// ═══════════════════════════════════════════════════════════════
+async function duplicateJob(id){
+  const j = jobs.find(j=>j._id===id); if(!j) return;
+  const d = {...j};
+  delete d._id; delete d.createdAt;
+  d.status = "Estimate";
+  d.dueDate = "";
+  d.paid = false;
+  d.photos = [];
+  d.createdAt = firebase.firestore.FieldValue.serverTimestamp();
+  try {
+    const ref = await db.collection("jobs").add(d);
+    showToast("Job duplicated ✓ — opening copy");
+    setTimeout(()=>{
+      S.editing = ref.id;
+      S.form = {...JOB0, ...d, _id:ref.id, expenses:{...EXP0,...(d.expenses||{})}, photos:[], status:"Estimate"};
+      setView("form");
+    }, 500);
+  } catch(e){ showToast("Error duplicating","error"); }
+}
+
+// ═══════════════════════════════════════════════════════════════
+// NOTEPAD (synced to Firebase per-user via a "meta" collection)
+// ═══════════════════════════════════════════════════════════════
+let notepadTimer = null;
+function saveNotepad(val){
+  S.notepadText = val;
+  clearTimeout(notepadTimer);
+  notepadTimer = setTimeout(async ()=>{
+    try{
+      await db.collection("meta").doc("notepad").set({text:val, updatedAt: firebase.firestore.FieldValue.serverTimestamp()});
+    }catch(e){}
+  }, 800);
+}
+function loadNotepad(){
+  if(S.notepadLoaded) return;
+  S.notepadLoaded = true;
+  db.collection("meta").doc("notepad").get().then(doc=>{
+    if(doc.exists){ S.notepadText = doc.data().text||""; render(); }
+  }).catch(()=>{});
+}
+
+
+// ─── DEFENSIVE HELPERS ─────────────────────────────────────────
+// Update just the history button without full re-render (prevents cursor jump)
+function updateHistoryBtn(val){
+  S.form.customerName = val;
+  const btn = document.getElementById("history-btn-wrap");
+  if(btn){
+    btn.innerHTML = val.trim()
+      ? `<button onclick="showCustomerHistory('${val.replace(/'/g,"\\'")}') " style="background:transparent;border:none;color:#7dcf7d;font-size:11px;cursor:pointer;font-family:var(--sans);font-weight:700;padding:0">📋 History</button>`
+      : "";
+  }
+}
+
+// ─── COPY FOR TEXT ─────────────────────────────────────────────
+function copyForText(arborist){
+  const j=S.form;
+  const cut=getMyCut(j);
+  const cutLine=arborist==="John"
+    ? (cut!==null ? `Your cut: ${fmt(cut)}` : `Your cut: TBD (discuss with me)`)
+    : arborist==="Patrick"
+      ? (()=>{
+          const exp=expTotal(j.expenses||{});
+          const net=(parseFloat(j.jobValue)||0)-exp;
+          const myCut=Math.max(0,net/2);
+          const lines=[`Your cut: ${fmt(myCut)} (50% after expenses)`];
+          if(exp>0){
+            const e=j.expenses||{};
+            const parts=[];
+            if(parseFloat(e.employee)) parts.push(`employee $${e.employee}`);
+            if(parseFloat(e.cleanup))  parts.push(`cleanup $${e.cleanup}`);
+            if(parseFloat(e.gas))      parts.push(`gas $${e.gas}`);
+            if(parseFloat(e.other))    parts.push(`other $${e.other}`);
+            lines.push(`Expenses deducted: ${parts.join(", ")}`);
+          }
+          return lines.join("\n");
+        })()
+      : "";
+
+  const parts=[
+    `📋 JOB DETAILS`,
+    `─────────────────`,
+    j.customerName ? `👤 Customer: ${j.customerName}` : null,
+    j.phone        ? `📞 Phone: ${j.phone}`            : null,
+    j.address      ? `📍 Location: ${j.address}`       : null,
+    j.jobType      ? `🪚 Job: ${j.jobType}`             : null,
+    j.dueDate      ? `📅 Date: ${fmtFull(j.dueDate)}`  : null,
+    j.jobValue     ? `💵 Job Value: ${fmt(j.jobValue)}` : null,
+    cutLine        ? cutLine                             : null,
+    j.notes        ? `\n📝 Notes:\n${j.notes}`          : null,
+    `─────────────────`,
+    `— Toronto Tree Services`,
+  ].filter(Boolean).join("\n");
+
+  navigator.clipboard.writeText(parts).then(()=>{
+    showToast(`Copied for ${arborist||"arborist"} ✓`);
+  }).catch(()=>{
+    // Fallback for older mobile browsers
+    const ta=document.createElement("textarea");
+    ta.value=parts; ta.style.position="fixed"; ta.style.opacity="0";
+    document.body.appendChild(ta); ta.select(); document.execCommand("copy");
+    document.body.removeChild(ta);
+    showToast(`Copied for ${arborist||"arborist"} ✓`);
+  });
+}
+
+
+// ═══════════════════════════════════════════════════════════════
+// LEADS
+// ═══════════════════════════════════════════════════════════════
+function renderLeads(){
+  if(S.leadView==="form") return renderLeadForm();
+
+  const lq = S.leadSearch.toLowerCase();
+  const allFiltered = lq ? leads.filter(l=>[l.customerName,l.phone,l.address,l.jobNeeded].some(f=>(f||"").toLowerCase().includes(lq))) : leads;
+  const activeLds = allFiltered.filter(l=>l.status!=="Dead"&&l.status!=="Won → Job");
+  const wonLds    = allFiltered.filter(l=>l.status==="Won → Job");
+  const deadLds   = allFiltered.filter(l=>l.status==="Dead");
+
+  return `<div class="page">
+    <div style="font-family:var(--serif);font-size:24px;font-weight:700;color:#c8dcc8;margin-bottom:2px">Leads</div>
+    <div style="color:var(--muted);font-size:13px;margin-bottom:12px">${leads.length} total · ${allFiltered.length !== leads.length ? allFiltered.length+" shown · " : ""}${activeLds.length} active</div>
+    <input style="margin-bottom:16px;font-size:15px" placeholder="🔍  Search name, phone, address..." value="${esc(S.leadSearch)}" oninput="S.leadSearch=this.value;render()">
+
+    ${activeLds.length===0&&leads.length===0?`
+    <div style="text-align:center;padding:60px 0">
+      <div style="font-size:52px;margin-bottom:14px">🌱</div>
+      <div style="font-family:var(--serif);font-size:20px;color:#4a6a4a">No leads yet</div>
+      <div style="font-size:14px;color:#3a5a3a;margin-top:6px">Tap + when a new customer calls</div>
+    </div>`:``}
+
+    ${activeLds.map(l=>renderLeadCard(l)).join("")}
+
+    ${wonLds.length?`
+    <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin:20px 0 10px">Won / Converted (${wonLds.length})</div>
+    ${wonLds.map(l=>renderLeadCard(l,true)).join("")}
+    `:""}
+
+    ${deadLds.length?`
+    <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin:20px 0 10px">Dead Leads (${deadLds.length})</div>
+    ${deadLds.map(l=>renderLeadCard(l,true)).join("")}
+    `:""}
+
+    ${S.deleteLeadId?renderDeleteLeadModal():""}
+  </div>`;
+}
+
+function renderLeadCard(l, dim){
+  const cfg = LEAD_STATUS_CFG[l.status]||{color:"#888",bg:"#eee",icon:"•"};
+  const copied = S.copiedLeadId===l._id;
+  const arbColor = l.assignedTo==="John"?"#93c5fd":l.assignedTo==="Patrick"?"#6ee7b7":"var(--muted)";
+  return `
+  <div style="background:var(--card);border:1px solid ${dim?"var(--border)":cfg.color+"44"};border-left:3px solid ${cfg.color};border-radius:12px;padding:14px 16px;margin-bottom:10px;opacity:${dim?0.65:1}">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:10px">
+      <div style="flex:1;min-width:0">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:5px;flex-wrap:wrap">
+          <div style="font-family:var(--serif);font-size:17px;font-weight:700;color:#c8dcc8">${esc(l.customerName)||"Unnamed"}</div>
+          <span style="background:${cfg.bg}33;color:${cfg.color};border:1px solid ${cfg.color}66;border-radius:20px;padding:2px 8px;font-size:10px;font-weight:700;white-space:nowrap">${cfg.icon} ${l.status}</span>
+        </div>
+        ${l.phone?`<div style="font-size:13px;color:#4ade80;margin-bottom:3px"><a href="tel:${esc(l.phone)}" style="color:#4ade80;text-decoration:none">📞 ${esc(l.phone)}</a></div>`:""}
+        ${l.address?`<div style="font-size:12px;color:var(--muted);margin-bottom:3px">📍 ${esc(l.address)}</div>`:""}
+        ${l.jobNeeded?`<div style="font-size:13px;color:var(--text-mid);margin-bottom:3px">🪚 ${esc(l.jobNeeded)}</div>`:""}
+        ${l.availability?`<div style="font-size:12px;color:var(--muted)">🗓 ${esc(l.availability)}</div>`:""}
+        ${l.assignedTo?`<div style="font-size:12px;color:${arbColor};font-weight:700;margin-top:4px">👷 ${l.assignedTo}</div>`:""}
+        ${l.leadSource?`<div style="font-size:11px;color:var(--muted);margin-top:3px">${{"Facebook":"📘","Website":"🌐","Google":"🔍","Referral":"🤝","Phone Call":"📞","Kijiji":"📌","Nextdoor":"🏘"}[l.leadSource]||"•"} ${l.leadSource}</div>`:""}
+      </div>
+      <div style="display:flex;flex-direction:column;gap:6px;align-items:flex-end;flex-shrink:0">
+        <button onclick="openEditLead('${l._id}')" style="background:transparent;border:1px solid var(--border);border-radius:8px;color:var(--text-mid);font-size:12px;padding:5px 10px;cursor:pointer;font-family:var(--sans)">✏️ Edit</button>
+        <button onclick="S.deleteLeadId='${l._id}';render()" style="background:transparent;border:none;color:#4a3a3a;cursor:pointer;font-size:15px;padding:4px" onmouseover="this.style.color='#ef4444'" onmouseout="this.style.color='#4a3a3a'">✕</button>
+      </div>
+    </div>
+
+    ${l.notes?`<div style="font-size:12px;color:var(--muted);background:#0d180d;border-radius:8px;padding:8px 10px;margin-bottom:10px;border:1px solid var(--border)">💬 ${esc(l.notes)}</div>`:""}
+
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <button onclick="copyLeadText('${l._id}')"
+        style="flex:1;min-width:120px;background:${copied?"linear-gradient(135deg,#166534,#14532d)":"linear-gradient(135deg,#1e3a1a,#162516)"};border:1px solid ${copied?"#16a34a":"#3a5a3a"};border-radius:9px;color:${copied?"#bbf7d0":"#7dcf7d"};font-size:13px;font-weight:700;padding:11px 10px;cursor:pointer;font-family:var(--sans);transition:all .15s;min-height:44px">
+        ${copied?"✅ Copied!":"📋 Copy to Send"}
+      </button>
+      <button onclick="openConvertModal('${l._id}')"
+        style="flex:1;min-width:120px;background:linear-gradient(135deg,#1a3a5f,#152a4a);border:1px solid #3b82f655;border-radius:9px;color:#93c5fd;font-size:13px;font-weight:700;padding:11px 10px;cursor:pointer;font-family:var(--sans);min-height:44px">
+        🔄 Convert to Job
+      </button>
+      <div style="flex:1;min-width:120px">
+        <select onchange="updateLeadStatus('${l._id}',this.value)" style="height:44px;font-size:13px">
+          ${LEAD_STATUSES.map(s=>`<option value="${s}" ${l.status===s?"selected":""}>${LEAD_STATUS_CFG[s].icon} ${s}</option>`).join("")}
+        </select>
+      </div>
+    </div>
+  </div>`;
+}
+
+function renderLeadForm(){
+  const f=S.leadForm;
+  const isJ=f.assignedTo==="John", isP=f.assignedTo==="Patrick";
+  return `<div class="page">
+    <div style="display:flex;gap:10px;align-items:center;margin-bottom:22px">
+      <button class="btn btn-ghost" style="padding:10px 14px;min-height:42px" onclick="S.leadView='list';render()">←</button>
+      <div>
+        <div style="font-family:var(--serif);font-size:22px;font-weight:700;color:#c8dcc8">${S.editingLead?"Edit Lead":"New Lead"}</div>
+        <div style="font-size:12px;color:var(--muted)">Quick capture — fill in what you know</div>
+      </div>
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:14px">
+
+      <div class="card-sm">
+        <div class="section-title">👤 Customer Info</div>
+        <div style="display:flex;flex-direction:column;gap:13px">
+          <div class="field"><label>Customer Name</label><input id="lf-name" value="${esc(f.customerName)}" oninput="S.leadForm.customerName=this.value" placeholder="e.g. Mike Thompson" autocomplete="name"></div>
+          <div class="field"><label>Phone Number</label>
+            <div style="display:flex;gap:8px">
+              <input id="lf-phone" type="tel" value="${esc(f.phone||"")}" oninput="S.leadForm.phone=this.value" placeholder="(416) 555-0123" style="flex:1" autocomplete="tel">
+              ${f.phone?`<a href="tel:${esc(f.phone)}" class="btn btn-ghost btn-sm" style="flex-shrink:0;text-decoration:none;min-width:48px">📞</a>`:""}
+            </div>
+          </div>
+          <div class="field"><label>Address / Location</label><input id="lf-addr" value="${esc(f.address||"")}" oninput="S.leadForm.address=this.value" placeholder="e.g. 45 Elm St, Scarborough ON" autocomplete="street-address"></div>
+        </div>
+      </div>
+
+      <div class="card-sm">
+        <div class="section-title">🪚 Job Info</div>
+        <div style="display:flex;flex-direction:column;gap:13px">
+          <div class="field"><label>What needs to be done?</label>
+            <textarea id="lf-job" oninput="S.leadForm.jobNeeded=this.value" rows="3" placeholder="e.g. Remove 2 large oak trees in backyard, branches over the roof...">${esc(f.jobNeeded||"")}</textarea>
+          </div>
+          <div class="field"><label>When are they available?</label><input id="lf-avail" value="${esc(f.availability||"")}" oninput="S.leadForm.availability=this.value" placeholder="e.g. Weekdays after 3pm, any weekend"></div>
+          <div class="field"><label>Extra Notes</label>
+            <textarea id="lf-notes" oninput="S.leadForm.notes=this.value" rows="2" placeholder="e.g. Gate on left side, dogs in yard, call before arriving...">${esc(f.notes||"")}</textarea>
+          </div>
+        </div>
+      </div>
+
+      <div class="card-sm">
+        <div class="section-title">👷 Assign & Status</div>
+        <div style="display:flex;flex-direction:column;gap:13px">
+          <div class="field">
+            <label>Send Lead To</label>
+            <div class="arb-toggle">
+              <button class="arb-btn ${isJ?"arb-john":""}" onclick="S.leadForm.assignedTo='John';render()">👷 John</button>
+              <button class="arb-btn ${isP?"arb-patrick":""}" onclick="S.leadForm.assignedTo='Patrick';render()">👷 Patrick</button>
+            </div>
+          </div>
+          <div class="field"><label>Lead Status</label>
+            <select onchange="S.leadForm.status=this.value;render()">
+              ${LEAD_STATUSES.map(s=>`<option value="${s}" ${f.status===s?"selected":""}>${LEAD_STATUS_CFG[s].icon} ${s}</option>`).join("")}
+            </select>
+          </div>
+          <div class="field">
+            <label>🔒 Lead Source (only you see this)</label>
+            <select onchange="S.leadForm.leadSource=this.value;render()">
+              <option value="">Unknown / Not set</option>
+              <option value="Facebook" ${f.leadSource==="Facebook"?"selected":""}>📘 Facebook</option>
+              <option value="Website" ${f.leadSource==="Website"?"selected":""}>🌐 Website</option>
+              <option value="Google" ${f.leadSource==="Google"?"selected":""}>🔍 Google</option>
+              <option value="Referral" ${f.leadSource==="Referral"?"selected":""}>🤝 Referral</option>
+              <option value="Phone Call" ${f.leadSource==="Phone Call"?"selected":""}>📞 Phone Call</option>
+              <option value="Kijiji" ${f.leadSource==="Kijiji"?"selected":""}>📌 Kijiji</option>
+              <option value="Nextdoor" ${f.leadSource==="Nextdoor"?"selected":""}>🏘 Nextdoor</option>
+              <option value="Other" ${f.leadSource==="Other"?"selected":""}>• Other</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <!-- Preview what will be copied -->
+      <div class="card-sm" style="border-color:#2a4a3a">
+        <div class="section-title" style="color:#7dcf7d">📋 Copy Preview</div>
+        <div style="background:#0d180d;border-radius:10px;padding:14px;font-size:13px;color:var(--text-mid);white-space:pre-wrap;line-height:1.7;font-family:monospace;border:1px solid var(--border)">${esc(buildLeadText(f))}</div>
+        <button onclick="copyLeadTextDirect()"
+          style="width:100%;margin-top:12px;background:linear-gradient(135deg,#1e3a1a,#162516);border:1px solid #3a5a3a;border-radius:10px;color:#7dcf7d;font-size:15px;font-weight:700;padding:13px;cursor:pointer;font-family:var(--sans);min-height:48px">
+          📋 Copy This Text
+        </button>
+      </div>
+
+      <div style="display:flex;gap:12px;margin-top:4px">
+        <button class="btn btn-ghost" style="flex:1" onclick="S.leadView='list';render()">Cancel</button>
+        <button class="btn btn-primary" style="flex:2" onclick="submitLead()">
+          ${S.editingLead?"💾 Save Lead":"✅ Save Lead"}
+        </button>
+      </div>
+
+    </div>
+  </div>`;
+}
+
+function renderDeleteLeadModal(){
+  return `<div class="overlay" onclick="S.deleteLeadId=null;render()" style="position:fixed">
+    <div class="modal-sheet" onclick="event.stopPropagation()">
+      <div style="font-size:36px;text-align:center;margin-bottom:12px">🗑️</div>
+      <div style="font-family:var(--serif);font-size:20px;font-weight:700;color:#c8dcc8;text-align:center;margin-bottom:8px">Delete this lead?</div>
+      <div style="color:var(--muted);text-align:center;margin-bottom:24px;font-size:14px">This cannot be undone.</div>
+      <div style="display:flex;gap:12px">
+        <button class="btn btn-ghost" style="flex:1" onclick="S.deleteLeadId=null;render()">Cancel</button>
+        <button class="btn btn-danger" style="flex:1" onclick="doDeleteLead()">Delete</button>
+      </div>
+    </div>
+  </div>`;
+}
+
+// ─── LEAD TEXT BUILDER ─────────────────────────────────────────
+function buildLeadText(lead){
+  const arb = lead.assignedTo ? `Hey ${lead.assignedTo},\n\n` : "";
+  const lines = [
+    arb + "New lead for you 👇",
+    "",
+  ];
+  if(lead.customerName) lines.push("Customer: " + lead.customerName);
+  if(lead.phone)        lines.push("\uD83D\uDCDE " + lead.phone);
+  if(lead.address)      lines.push("\uD83D\uDCCD " + lead.address);
+  if(lead.jobNeeded){
+    lines.push("");
+    lines.push("Job needed:");
+    lines.push(lead.jobNeeded);
+  }
+  if(lead.availability){
+    lines.push("");
+    lines.push("Available: " + lead.availability);
+  }
+  if(lead.notes){
+    lines.push("");
+    lines.push("Notes: " + lead.notes);
+  }
+  return lines.join("\n");
+}
+
+// ─── LEAD ACTIONS ──────────────────────────────────────────────
+function openNewLead(){
+  S.leadForm={...LEAD0};
+  S.editingLead=null;
+  S.leadView="form";
+  render(); window.scrollTo(0,0);
+}
+function openEditLead(id){
+  const l=leads.find(l=>l._id===id); if(!l) return;
+  S.leadForm={...LEAD0,...l};
+  S.editingLead=id;
+  S.leadView="form";
+  render(); window.scrollTo(0,0);
+}
+async function submitLead(){
+  if(!S.leadForm.customerName.trim()&&!S.leadForm.phone.trim()){
+    alert("Please enter at least a name or phone number"); return;
+  }
+  try{
+    await dbSaveLead({...S.leadForm});
+    S.leadView="list"; S.editingLead=null;
+    render(); showToast(S.editingLead?"Lead updated \u2713":"Lead saved \u2713");
+  }catch(e){ console.error(e); showToast("Error saving lead","error"); }
+}
+async function doDeleteLead(){
+  if(!S.deleteLeadId) return;
+  try{ await dbDeleteLead(S.deleteLeadId); S.deleteLeadId=null; showToast("Lead deleted"); }
+  catch(e){ showToast("Error","error"); }
+}
+async function updateLeadStatus(id, status){
+  try{ await dbPatchLead(id,{status}); }
+  catch(e){ showToast("Error updating status","error"); }
+}
+function copyLeadText(id){
+  const l=leads.find(l=>l._id===id); if(!l) return;
+  const text=buildLeadText(l);
+  doClipboard(text, ()=>{
+    S.copiedLeadId=id; render();
+    setTimeout(()=>{ S.copiedLeadId=null; render(); },2000);
+  });
+}
+function copyLeadTextDirect(){
+  const text=buildLeadText(S.leadForm);
+  doClipboard(text, ()=>showToast("Copied \u2713"));
+}
+function doClipboard(text, cb){
+  if(navigator.clipboard&&window.isSecureContext){
+    navigator.clipboard.writeText(text).then(cb).catch(()=>fallbackCopy(text,cb));
+  } else { fallbackCopy(text,cb); }
+}
+function fallbackCopy(text,cb){
+  const ta=document.createElement("textarea");
+  ta.value=text; ta.style.cssText="position:fixed;opacity:0;top:0;left:0";
+  document.body.appendChild(ta); ta.focus(); ta.select();
+  try{ document.execCommand("copy"); cb(); }catch(e){}
+  document.body.removeChild(ta);
+}
+
+
+// ═══════════════════════════════════════════════════════════════
+// CONVERT LEAD → JOB
+// ═══════════════════════════════════════════════════════════════
+function openConvertModal(leadId){
+  const l = leads.find(l=>l._id===leadId); if(!l) return;
+  S.convertLead = {...l};
+  S.convertArborist = l.assignedTo || "";
+  S.convertJobType = l.jobNeeded || "";
+  render();
+}
+
+function renderConvertModal(){
+  const l = S.convertLead; if(!l) return "";
+  const isJ = S.convertArborist==="John";
+  const isP = S.convertArborist==="Patrick";
+  return `<div class="overlay" onclick="S.convertLead=null;render()" style="position:fixed;z-index:110">
+    <div class="modal-sheet" onclick="event.stopPropagation()" style="max-width:480px">
+      <div style="font-size:28px;text-align:center;margin-bottom:6px">🔄</div>
+      <div style="font-family:var(--serif);font-size:20px;font-weight:700;color:#c8dcc8;text-align:center;margin-bottom:4px">Convert to Job</div>
+      <div style="color:var(--muted);text-align:center;font-size:13px;margin-bottom:20px">${esc(l.customerName||"This lead")} will become a job in your Jobs section</div>
+
+      <!-- Lead summary -->
+      <div style="background:#0d180d;border:1px solid var(--border);border-radius:10px;padding:12px;margin-bottom:18px;font-size:13px;line-height:1.8;color:var(--text-mid)">
+        ${l.customerName?`<div>👤 ${esc(l.customerName)}</div>`:""}
+        ${l.phone?`<div>📞 ${esc(l.phone)}</div>`:""}
+        ${l.address?`<div>📍 ${esc(l.address)}</div>`:""}
+        ${l.jobNeeded?`<div>🪚 ${esc(l.jobNeeded)}</div>`:""}
+      </div>
+
+      <!-- Assign arborist — this is where the money calc kicks in -->
+      <div style="margin-bottom:16px">
+        <label>Assign Job To (sets your cut calculation)</label>
+        <div class="arb-toggle" style="margin-top:8px">
+          <button class="arb-btn ${isJ?"arb-john":""}" onclick="S.convertArborist='John';render()">👷 John</button>
+          <button class="arb-btn ${isP?"arb-patrick":""}" onclick="S.convertArborist='Patrick';render()">👷 Patrick</button>
+        </div>
+        ${!S.convertArborist?`<div style="font-size:12px;color:#f59e0b;margin-top:6px">⚠️ Select an arborist to activate cut calculations</div>`:""}
+      </div>
+
+      <!-- Job type confirm -->
+      <div style="margin-bottom:16px" class="field">
+        <label>Job Type</label>
+        <select onchange="S.convertJobType=this.value">
+          <option value="">Select job type...</option>
+          ${JOB_TYPES.map(t=>`<option value="${t}" ${(S.convertJobType||"").includes(t)?"selected":""}>${t}</option>`).join("")}
+        </select>
+      </div>
+
+      <!-- Cut preview if arborist selected -->
+      ${S.convertArborist?`
+      <div style="background:linear-gradient(135deg,#0d1f0d,#122012);border:1px solid #2a4a2a;border-radius:10px;padding:14px;margin-bottom:18px">
+        <div style="font-size:11px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.8px;margin-bottom:6px">Your Cut (once job value is set)</div>
+        ${S.convertArborist==="John"
+          ?`<div style="font-size:13px;color:#93c5fd">📊 Uses Sunny's Rates — enter the job value after converting</div>`
+          :`<div style="font-size:13px;color:#6ee7b7">💰 50% split after expenses — enter details after converting</div>`}
+        <div style="font-size:11px;color:var(--muted);margin-top:4px">You can fill in the job value + expenses on the next screen</div>
+      </div>`:""}
+
+      <div style="display:flex;gap:12px">
+        <button class="btn btn-ghost" style="flex:1" onclick="S.convertLead=null;render()">Cancel</button>
+        <button class="btn btn-primary" style="flex:2" onclick="confirmConvert()">✅ Convert to Job</button>
+      </div>
+    </div>
+  </div>`;
+}
+
+async function confirmConvert(){
+  const l = S.convertLead; if(!l) return;
+  // Build a new job pre-filled from lead data
+  const newJob = {
+    ...JOB0,
+    expenses: {...EXP0},
+    photos: [],
+    customerName: l.customerName || "",
+    phone:        l.phone || "",
+    address:      l.address || "",
+    jobType:      S.convertJobType || "",
+    assignedTo:   S.convertArborist || "",
+    notes:        [l.jobNeeded, l.availability ? "Available: "+l.availability : "", l.notes].filter(Boolean).join("\n\n"),
+    status:       "Estimate",
+    // stash the lead source as a private note prefix
+    _leadSource:  l.leadSource || "",
+  };
+  try {
+    // Save as job
+    const d = {...newJob};
+    d.createdAt = firebase.firestore.FieldValue.serverTimestamp();
+    const ref = await db.collection("jobs").add(d);
+
+    // Mark lead as Won → Job and store the job ID
+    await dbPatchLead(l._id, {status:"Won → Job", convertedJobId: ref.id});
+
+    S.convertLead = null;
+    S.convertArborist = "";
+    S.convertJobType = "";
+
+    showToast("Lead converted to job! Opening job... ✓");
+
+    // Small delay then open the new job form so they can fill in value/expenses
+    setTimeout(()=>{
+      S.editing = ref.id;
+      const fullJob = {...newJob, _id: ref.id};
+      S.form = {...JOB0, ...fullJob, expenses:{...EXP0}, photos:[]};
+      setView("form");
+    }, 800);
+
+  } catch(e){
+    console.error(e);
+    showToast("Error converting lead","error");
+  }
+}
+
+// ─── PDF QUOTE ─────────────────────────────────────────────────
+function generateQuote(){
+  const j=S.form;
+  if(!j.customerName){showToast("Save the job first","warn");return;}
+  try{
+    const {jsPDF}=window.jspdf;
+    const doc=new jsPDF();
+    // Dark header
+    doc.setFillColor(15,26,15);
+    doc.rect(0,0,210,38,`F`);
+    doc.setTextColor(184,212,184);
+    doc.setFontSize(22);doc.setFont("helvetica","bold");
+    doc.text("Toronto Tree Services",14,18);
+    doc.setFontSize(10);doc.setFont("helvetica","normal");
+    doc.text("torontotreeservices.ca  |  Professional Tree Care",14,27);
+    doc.setTextColor(90,140,90);
+    doc.text("Est. 2026",185,18,{align:"right"});
+
+    // Quote title
+    doc.setTextColor(0);
+    doc.setFontSize(20);doc.setFont("helvetica","bold");
+    doc.text("SERVICE QUOTE",14,52);
+    const dateStr=new Date().toLocaleDateString("en-CA",{year:"numeric",month:"long",day:"numeric"});
+    doc.setFontSize(10);doc.setFont("helvetica","normal");doc.setTextColor(100);
+    doc.text(`Date: ${dateStr}`,196,47,{align:"right"});
+    doc.text(`Quote #: TTS-${(S.editing||Date.now().toString()).slice(-6).toUpperCase()}`,196,54,{align:"right"});
+
+    // Divider
+    doc.setDrawColor(74,124,74);doc.setLineWidth(0.5);
+    doc.line(14,57,196,57);
+
+    // Customer box
+    doc.setFillColor(240,248,240);
+    doc.rect(14,62,85,45,`F`);
+    doc.setDrawColor(200,220,200);doc.rect(14,62,85,45,`S`);
+    doc.setTextColor(74,124,74);doc.setFontSize(9);doc.setFont("helvetica","bold");
+    doc.text("CUSTOMER",19,70);
+    doc.setTextColor(0);doc.setFont("helvetica","normal");doc.setFontSize(11);
+    doc.text(j.customerName||"",19,79);
+    if(j.address){const lines=doc.splitTextToSize(j.address,70);doc.setFontSize(9);doc.text(lines,19,86);}
+    if(j.phone){doc.setFontSize(9);doc.text(j.phone,19,99);}
+    if(j.email){doc.setFontSize(9);doc.text(j.email,19,105);}
+
+    // Service box
+    doc.setFillColor(248,252,248);
+    doc.rect(105,62,91,45,`F`);
+    doc.setDrawColor(200,220,200);doc.rect(105,62,91,45,`S`);
+    doc.setTextColor(74,124,74);doc.setFontSize(9);doc.setFont("helvetica","bold");
+    doc.text("SERVICE DETAILS",110,70);
+    doc.setTextColor(0);doc.setFont("helvetica","normal");doc.setFontSize(10);
+    doc.text(j.jobType||"Tree Service",110,79);
+    if(j.address){const lines=doc.splitTextToSize(j.address,80);doc.setFontSize(9);doc.text(lines,110,86);}
+    if(j.dueDate){doc.setFontSize(9);doc.text(`Scheduled: ${fmtFull(j.dueDate)}`,110,99);}
+    doc.setFontSize(9);doc.text(`Assigned To: ${j.assignedTo||"TBD"}`,110,106);
+
+    // Notes
+    if(j.notes){
+      doc.setFontSize(10);doc.setFont("helvetica","bold");doc.setTextColor(50);
+      doc.text("Scope of Work / Notes:",14,118);
+      doc.setFont("helvetica","normal");doc.setTextColor(60);
+      const nl=doc.splitTextToSize(j.notes,180);
+      doc.setFontSize(10);doc.text(nl,14,126);
+    }
+
+    // Price box
+    const py=j.notes?Math.min(126+doc.splitTextToSize(j.notes,180).length*5+10,180):130;
+    doc.setFillColor(15,26,15);
+    doc.rect(14,py,182,28,`F`);
+    doc.setTextColor(184,212,184);
+    doc.setFontSize(13);doc.setFont("helvetica","bold");
+    doc.text("ESTIMATE TOTAL:",19,py+12);
+    doc.setFontSize(20);
+    doc.text(fmt(j.jobValue),196,py+12,{align:"right"});
+    doc.setFontSize(9);doc.setFont("helvetica","normal");doc.setTextColor(120,180,120);
+    doc.text("*Final price may vary if scope of work changes",19,py+22);
+
+    // Terms
+    const ty=py+36;
+    doc.setTextColor(80);doc.setFontSize(9);doc.setFont("helvetica","bold");
+    doc.text("TERMS & CONDITIONS",14,ty);
+    doc.setFont("helvetica","normal");doc.setTextColor(100);
+    ["This quote is valid for 30 days from the date above.",
+     "Final price may vary if additional work is required on-site.",
+     "Payment is due upon completion of the job.",
+     "For large jobs, a deposit may be required before work begins."].forEach((t,i)=>{
+      doc.text(`• ${t}`,14,ty+7+(i*6));
+    });
+
+    // Signature
+    doc.setTextColor(0);
+    doc.setLineWidth(0.3);doc.setDrawColor(180);
+    doc.line(14,260,90,260);doc.line(120,260,196,260);
+    doc.setFontSize(8);doc.setTextColor(120);
+    doc.text("Customer Signature & Date",14,267);
+    doc.text("Authorized by Toronto Tree Services",120,267);
+
+    // Footer
+    doc.setFillColor(15,26,15);doc.rect(0,278,210,20,`F`);
+    doc.setTextColor(74,124,74);doc.setFontSize(9);
+    doc.text("Toronto Tree Services  |  torontotreeservices.ca  |  Professional Tree Care Toronto & GTA",105,288,{align:"center"});
+
+    const fname=`Quote-${(j.customerName||"Customer").replace(/\s+/g,"-")}-${new Date().toISOString().slice(0,10)}.pdf`;
+    doc.save(fname);
+    showToast("PDF quote saved ✓");
+  }catch(e){ console.error(e); showToast("PDF error — check console","error"); }
+}
+
+
+function exportLeads(){
+  if(!leads.length){showToast("No leads to export","warn");return;}
+  const rows=leads.map(l=>({
+    "Customer Name": l.customerName||"",
+    "Phone":         l.phone||"",
+    "Address":       l.address||"",
+    "Job Needed":    l.jobNeeded||"",
+    "Availability":  l.availability||"",
+    "Assigned To":   l.assignedTo||"",
+    "Status":        l.status||"",
+    "Lead Source":   l.leadSource||"Unknown",
+    "Notes":         l.notes||"",
+  }));
+  const ws=XLSX.utils.json_to_sheet(rows);
+  ws["!cols"]=[{wch:20},{wch:15},{wch:30},{wch:30},{wch:20},{wch:12},{wch:18},{wch:14},{wch:30}];
+  const wb=XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb,ws,"Leads");
+  // Source summary
+  const sources=["Facebook","Website","Google","Referral","Phone Call","Kijiji","Nextdoor","Other"];
+  const sm=sources.map(s=>({Source:s,Count:leads.filter(l=>l.leadSource===s).length}));
+  sm.push({Source:"Unknown",Count:leads.filter(l=>!l.leadSource).length});
+  sm.push({Source:"TOTAL",Count:leads.length});
+  const ws2=XLSX.utils.json_to_sheet(sm);
+  ws2["!cols"]=[{wch:16},{wch:8}];
+  XLSX.utils.book_append_sheet(wb,ws2,"By Source");
+  XLSX.writeFile(wb,`TTS-Leads-${new Date().toISOString().slice(0,10)}.xlsx`);
+  showToast("Leads exported ✓");
+}
+
+// ─── EXCEL EXPORT ──────────────────────────────────────────────
+function exportExcel(){
+  if(!jobs.length){showToast("No jobs to export","warn");return;}
+  const rows=jobs.map(j=>({
+    "Customer Name":j.customerName||"",
+    "Phone":j.phone||"",
+    "Email":j.email||"",
+    "Address":j.address||"",
+    "Job Type":j.jobType||"",
+    "Arborist":j.assignedTo||"",
+    "Job Value ($)":parseFloat(j.jobValue)||0,
+    "Status":j.status||"",
+    "Due Date":j.dueDate||"",
+    "Paid":j.paid?"Yes":"No",
+    "My Cut ($)":j.status==="Completed"?(getMyCut(j)||0):0,
+    "Est. Cut ($)":getMyCut(j)||0,
+    "Expenses ($)":expTotal(j.expenses||{}),
+    "Employee ($)":parseFloat((j.expenses||{}).employee)||0,
+    "Cleanup ($)":parseFloat((j.expenses||{}).cleanup)||0,
+    "Gas ($)":parseFloat((j.expenses||{}).gas)||0,
+    "Other Exp ($)":parseFloat((j.expenses||{}).other)||0,
+    "Notes":j.notes||"",
+    "Reminder Date":j.remindDate||"",
+    "Reminder Note":j.remindNote||"",
+    "Follow-up Date":j.followUpDate||"",
+  }));
+  const ws=XLSX.utils.json_to_sheet(rows);
+  ws["!cols"]=[{wch:20},{wch:15},{wch:25},{wch:30},{wch:20},{wch:10},{wch:12},{wch:12},{wch:12},{wch:8},{wch:12},{wch:12},{wch:12},{wch:12},{wch:12},{wch:10},{wch:12},{wch:30},{wch:14},{wch:25},{wch:14}];
+  const wb=XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb,ws,"Jobs");
+  const completed=jobs.filter(j=>j.status==="Completed");
+  const sm=[
+    {Metric:"Total Jobs",Value:jobs.length},
+    {Metric:"Completed",Value:completed.length},
+    {Metric:"Active",Value:jobs.filter(j=>["Scheduled","In Progress"].includes(j.status)).length},
+    {Metric:"Overdue",Value:jobs.filter(isOverdue).length},
+    {Metric:"Estimates Pending",Value:jobs.filter(j=>j.status==="Estimate").length},
+    {Metric:"Total Earned (My Cut)",Value:completed.reduce((s,j)=>s+getEarned(j),0)},
+    {Metric:"John - Earned",Value:completed.filter(j=>j.assignedTo==="John").reduce((s,j)=>s+getEarned(j),0)},
+    {Metric:"Patrick - Earned",Value:completed.filter(j=>j.assignedTo==="Patrick").reduce((s,j)=>s+getEarned(j),0)},
+    {Metric:"Forecast (Active Jobs)",Value:jobs.filter(j=>!["Completed","Cancelled","Failed"].includes(j.status)).reduce((s,j)=>{const c=getMyCut(j);return s+(typeof c==="number"?c:0);},0)},
+  ];
+  const ws2=XLSX.utils.json_to_sheet(sm);
+  ws2["!cols"]=[{wch:30},{wch:15}];
+  XLSX.utils.book_append_sheet(wb,ws2,"Summary");
+  XLSX.writeFile(wb,`TTS-CRM-${new Date().toISOString().slice(0,10)}.xlsx`);
+  showToast("Excel exported ✓");
+}
+
+// ─── FIREBASE SETUP ────────────────────────────────────────────
+function connectFB(){
+  const raw=(document.getElementById("fb-in")||{}).value||"";
+  const err=document.getElementById("fb-err");
+  try{
+    let cleaned=raw.trim().replace(/^[^{]*/,"").replace(/[^}]*$/,"");
+    if(!cleaned.startsWith("{"))cleaned=raw;
+    const cfg=JSON.parse(cleaned);
+    if(!cfg.apiKey||!cfg.projectId)throw new Error("missing fields");
+    if(!initFB(cfg))throw new Error("init failed");
+    localStorage.setItem("tts_fb_cfg",JSON.stringify(cfg));
+    if(err)err.style.display="none";
+  }catch(e){
+    if(err){err.textContent="⚠️ Invalid config. Copy the exact firebaseConfig { } object from Firebase console.";err.style.display="block";}
+  }
+}
+function disconnectFB(){
+  if(!confirm("Disconnect from Firebase? Your data stays safe on Firebase.")) return;
+  if(unsub)unsub(); db=null; jobs=[];
+  localStorage.removeItem("tts_fb_cfg");
+  render();
+}
+
+// ─── TOAST ─────────────────────────────────────────────────────
+function showToast(msg,type){
+  const t=document.createElement("div");
+  t.className="toast";
+  if(type==="error")t.style.cssText="background:#3a1a1a;border-color:#7f1d1d;color:#fca5a5";
+  if(type==="warn")t.style.cssText="background:#3a2a0a;border-color:#78350f;color:#fde68a";
+  t.textContent=msg;
+  document.body.appendChild(t);
+  setTimeout(()=>{t.style.opacity="0";t.style.transition="opacity .3s";setTimeout(()=>t.remove(),300);},2500);
+}
+
+// ═══════════════════════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════════════════════
+if("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(()=>{});
+const _saved=localStorage.getItem("tts_fb_cfg");
+if(_saved){try{initFB(JSON.parse(_saved));}catch(e){localStorage.removeItem("tts_fb_cfg");}}
+render();
+</script>
+</body>
+</html>
